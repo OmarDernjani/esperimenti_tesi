@@ -1,0 +1,18 @@
+# env
+python-dotenv
+
+# dataset
+datasets
+
+# database and validation
+sqlalchemy
+pydantic
+psycopg2-binary
+
+# llm
+langchain
+langchain-ollama
+langchain-community
+
+# others
+jupyter
