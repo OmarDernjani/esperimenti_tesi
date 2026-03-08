@@ -44,7 +44,13 @@ def build_solver_chain(model: str = 'mistral-nemo'):
          'put | before and after the script'),
         ('human', '{user_prompt}')
     ])
-    llm = ChatOllama(model=model)
+    
+    llm = ChatOllama(
+        model=model,
+        num_ctx=4096,
+        num_keep = 0
+    )
+
     return template | llm | StrOutputParser()
 
 
@@ -136,7 +142,13 @@ def resampling(question: str, solver_chain, model: str = 'llama3.1:8b', n_varian
         ('human', '{user_prompt}')
     ])
 
-    llm_resampling = ChatOllama(model=model)
+    llm_resampling = ChatOllama(
+        model=model,
+        num_ctx=4096,
+        num_keep = 0
+    )
+
+
     chain_res = template_resampling | llm_resampling | StrOutputParser()
     response_resampled = chain_res.invoke({'user_prompt': question})
 
@@ -158,6 +170,23 @@ def resampling(question: str, solver_chain, model: str = 'llama3.1:8b', n_varian
         })
 
     return variant_response
+
+def get_minibatch(data, n_per_difficulty: int = 50) -> list:
+    
+    difficulties = ['introductory', 'interview', 'competition']
+    samples = []
+
+    for diff in difficulties:
+        indices = [
+            i for i, d in enumerate(data['difficulty']) 
+            if d == diff
+        ][:n_per_difficulty]
+        
+        for i in indices:
+            samples.append(get_problem(data, index=i))
+    
+    return samples
+
 
 def EVALUATE_PROMPT():
     #evaluate prompt based on the test cases
