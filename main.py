@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 import os
 import utils
 from tqdm import tqdm
+from APO import automatic_prompt_engineering
 
 load_dotenv()
 
@@ -16,6 +17,7 @@ samples = utils.get_minibatch(
     n_per_difficulty=int(os.getenv("N_PER_DIFFICULTY", 50))
 )
 
+#Loop resampling
 for problem in tqdm(samples, desc="Problemi processati"):
     baseline_code = utils.extract_code(
         solver_chain.invoke({"user_prompt": problem["question"]})
@@ -38,4 +40,31 @@ for problem in tqdm(samples, desc="Problemi processati"):
         input_output=problem["input_output"],
         baseline_code=baseline_code,
         algorithm="resampling"
+    )
+
+
+# Loop Automatic Prompt Engineering
+for problem in tqdm(samples, desc="Problemi processati"):
+    
+    
+    baseline_code = utils.extract_code(
+        solver_chain.invoke({"user_prompt": problem["question"]})
+    )
+
+    variant_response, critique = automatic_prompt_engineering(
+        user_prompt=problem["question"],
+        target_model=os.getenv("MODEL_TARGET"),
+        socratic_model=os.getenv("MODEL_OPTIMIZER")
+    )
+
+    utils.saving_data(
+        variant_response=variant_response,
+        dataset=os.getenv("DATASET_NAME"),
+        question=problem["question"],
+        model_optimizer=os.getenv("MODEL_OPTIMIZER"),
+        model_target=os.getenv("MODEL_TARGET"),
+        difficulty=problem["difficulty"],
+        input_output=problem["input_output"],
+        baseline_code=baseline_code,
+        algorithm="APE"
     )
