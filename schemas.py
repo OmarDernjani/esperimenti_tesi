@@ -8,6 +8,7 @@ class ProblemSchema(BaseModel):
     code : str
     difficulty: str
     input_output: str
+    critique: str | None = None
 
 class SolutionSchema(BaseModel):
     problem_id: int

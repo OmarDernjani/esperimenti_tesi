@@ -1,0 +1,56 @@
+Problema Mishka, risolvere e dare tassonomia degli errori
+
+SELECT *
+FROM problems
+JOIN solutions ON problems.problem_id = solutions.problem_id
+WHERE problems.problem_id = 40;
+
+
+
+
+
+def max_spend(s):
+    spent = 0
+    while s >= 10:
+        s -= 10
+        spent += s // 10
+    return spent
+
+{
+  "inputs": [
+    "6\n1\n10\n19\n9876\n12345\n1000000000\n"
+  ],
+  "outputs": [
+    "1\n11\n21\n10973\n13716\n1111111111\n"
+  ]
+}
+
+
+
+import math
+
+def get_probability(s):
+    n = len(s)
+    prob = 0
+    for i in range(n):
+        # Check if Vasya can guess k after opening two letters
+        if s[(i + 1) % n] != s[i]:
+            prob += 1 / n
+    return round(prob, 6)
+
+s = input()
+print(get_probability(s))
+
+
+
+
+from collections import Counter
+from string import ascii_lowercase
+
+def find_shift(s):
+    counter = Counter()
+    for i in range(len(s)):
+        shifted_s = s[i:] + s[:i]
+        counter[shifted_s] += 1
+    min_count = min(counter.values())
+    return list(i for i, c in counter.items() if c == min_count)

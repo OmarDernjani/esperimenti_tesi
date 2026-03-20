@@ -1,13 +1,15 @@
 import re
+import math
+import sys
 from datasets import load_dataset
 from sqlalchemy.orm import Session
 from schemas import ProblemSchema, SolutionSchema
-from database import Problem, Solution, engine
+from models import Problem, Solution
+from db import engine
 from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-
-
+import subprocess
 
 def load_apps_dataset():
     
@@ -38,10 +40,12 @@ def build_solver_chain(model: str = 'mistral-nemo'):
     """Logica della chain per il modello target"""
 
     template = ChatPromptTemplate([
-        ('system', 
-         'You are a helpful assistant for coding, return only the solution for the coding problem '
-         '(no test cases needed, no example usage needed) described by the user in python, '
-         'put | before and after the script'),
+        ('system',
+         'You are a helpful assistant for coding. '
+         'Write a complete, standalone Python script that solves the competitive programming problem described by the user. '
+         'The script must read input from stdin (using input() or sys.stdin) and print the result to stdout. '
+         'Do not include test cases, example usage, or explanations. '
+         'Wrap the code in a markdown Python code block: ```python ... ```'),
         ('human', '{user_prompt}')
     ])
     
@@ -57,16 +61,21 @@ def build_solver_chain(model: str = 'mistral-nemo'):
 
 def extract_code(response: str) -> str:
 
-    """Estrae il codice dal prompt (da rivedere)"""
+    """Estrae il codice dal prompt"""
 
-    pipe_match = re.findall(r'\|(.+?)\|', response, re.DOTALL)
+    # Prova markdown code block con python/py o generico
+    for pattern in [r'```python(.*?)```', r'```py(.*?)```', r'```(.*?)```']:
+        matches = re.findall(pattern, response, re.DOTALL)
+        if matches:
+            return max(matches, key=len).strip()
+
+    # Fallback: pipe delimiter (meno affidabile se il codice usa |)
+    pipe_match = re.findall(r'\|([^|]+)\|', response, re.DOTALL)
     if pipe_match:
-        return max(pipe_match, key=len).strip()  
-    
-    code_match = re.findall(r'```python(.+?)```', response, re.DOTALL)
-    if code_match:
-        return max(code_match, key=len).strip()
-    
+        candidates = [m.strip() for m in pipe_match if len(m.strip()) > 20]
+        if candidates:
+            return max(candidates, key=len)
+
     return response.strip()
 
 
@@ -81,7 +90,8 @@ def saving_data(
         input_output: str,
         baseline_code: str,
         algorithm: str,
-        accuracy: float = 0.0
+        accuracy: float = 0.0,
+        critique: str | None = None
     ):
 
     """Salva i dati sulla sessione del DB"""
@@ -94,7 +104,8 @@ def saving_data(
                 model_optimizer=model_optimizer,
                 difficulty=difficulty,
                 input_output=str(input_output),
-                code=baseline_code
+                code=baseline_code,
+                critique=critique
             )
 
             db_problem = Problem(**problem_data.model_dump())
@@ -188,10 +199,46 @@ def get_minibatch(data, n_per_difficulty: int = 50) -> list:
     return samples
 
 
-def EVALUATE_PROMPT():
-    #evaluate prompt based on the test cases
-    #see where and how the code can be exectued
-    pass
+def run_and_test_code(file_path: str, test_input: str) -> dict:
+    """Esegue lo script passando lo standard input e catturando l'output."""
+    try:
+        proc = subprocess.Popen(
+            [sys.executable, file_path],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding='utf-8',
+        )
+        try:
+            stdout, stderr = proc.communicate(input=test_input, timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.communicate()
+            return {"success": False, "output": None, "error": "Timeout"}
+
+        if proc.returncode == 0:
+            return {"success": True, "output": stdout, "error": None}
+        else:
+            return {"success": False, "output": None, "error": stderr}
+
+    except Exception as e:
+        return {"success": False, "output": None, "error": str(e)}
+
+def calculate_pass_at_k(n: int, c: int, k: int) -> float:
+    """
+    Calcola la metrica pass@k.
+    n: numero totale di campioni (soluzioni) generati per il problema.
+    c: numero di campioni corretti (che passano tutti i test case).
+    k: il valore 'k' per cui calcolare la probabilità (es. 1, 3, 5, 10).
+    """
+
+    if n - c < k:
+        return 1.0
+    
+    if k > n:
+        return 1.0
+
+    return 1.0 - (math.comb(n - c, k) / math.comb(n, k))
 
 def AUTOMATIC_PROMPT_ENGINEERING():
     #use resampler

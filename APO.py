@@ -1,7 +1,7 @@
 from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from utils import build_solver_chain, resampling, extract_code
+from utils import build_solver_chain, resampling
 import os
 
 
@@ -19,14 +19,15 @@ def generate_socratic_chain(model: str = 'llama3.1:8b'):
     return template | llm | StrOutputParser()
 
 
-def generate_delta_chain(delta_model: str = 'mistral-nemo'):
-    """Genera la soluzione migliorata a partire dal codice + critica"""
+def generate_improved_prompt_chain(delta_model: str = 'mistral-nemo'):
+    """Genera un prompt migliorato a partire dal problema originale, il codice baseline e la critica"""
     template = ChatPromptTemplate([
         ('system',
-         'You are a code-savvy LLM who solves the problem denoted in the prompt '
-         'and follows the instructions exactly to build the solution. '
-         'put | before and after the script'),
-        ('human', 'Original code:\n{code}\n\nCritique:\n{critique}')
+         'You are a prompt engineer. Given a competitive programming problem, a baseline solution, '
+         'and a critique of that solution, rewrite the problem description to be clearer and more precise, '
+         'so that an LLM would be guided to avoid the issues highlighted in the critique. '
+         'Return only the rewritten problem description, no code, no explanations.'),
+        ('human', 'Problem:\n{user_prompt}\n\nBaseline code:\n{code}\n\nCritique:\n{critique}')
     ])
 
     llm = ChatOllama(model=delta_model, num_ctx=4096, num_keep=0)
@@ -35,30 +36,29 @@ def generate_delta_chain(delta_model: str = 'mistral-nemo'):
 
 def automatic_prompt_engineering(
         user_prompt: str,
+        baseline_code: str,
         target_model: str = 'mistral-nemo',
-        socratic_model: str = 'llama3.1:8b'
+        socratic_model: str = 'llama3.1:8b',
+        n_variants: int = 5
     ):
 
     solver_chain = build_solver_chain(target_model)
-    baseline_response = solver_chain.invoke({'user_prompt': user_prompt})
 
-    
     socratic_chain = generate_socratic_chain(socratic_model)
-    critique = socratic_chain.invoke({'code': baseline_response})
+    critique = socratic_chain.invoke({'code': baseline_code})
 
-    
-    delta_chain = generate_delta_chain(target_model)
-    improved_response = delta_chain.invoke({
-        'code': baseline_response,
+    delta_chain = generate_improved_prompt_chain(target_model)
+    improved_prompt = delta_chain.invoke({
+        'user_prompt': user_prompt,
+        'code': baseline_code,
         'critique': critique
     })
 
-    improved_code = extract_code(improved_response)
-
     resampled_variants = resampling(
-        question = improved_response,
-        solver_chain = solver_chain,
-        model = os.getenv("MODEL_OPTIMIZER", socratic_model)
+        question=improved_prompt,
+        solver_chain=solver_chain,
+        model=os.getenv("MODEL_OPTIMIZER", socratic_model),
+        n_variants=n_variants
     )
 
-    return resampled_variants, critique 
+    return resampled_variants, critique

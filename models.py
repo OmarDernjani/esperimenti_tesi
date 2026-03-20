@@ -18,6 +18,8 @@ class Problem(Base):
     code = Column(Text, nullable = False)
     difficulty = Column(String, nullable=False)
     input_output = Column(Text, nullable=False)
+    critique = Column(Text, nullable=True)
+    baseline_accuracy = Column(Float, nullable=True)
     solutions = relationship("Solution", back_populates="problem")
 
 class Solution(Base):
