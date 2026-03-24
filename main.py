@@ -1,72 +1,101 @@
 from dotenv import load_dotenv
 import os
-import utils
+import json
+from datetime import datetime
 from tqdm import tqdm
-from APO import automatic_prompt_engineering
+
+import utils
+from algorithms import run_baseline, run_ape, run_apo
 
 load_dotenv()
 
-train_data, _ = utils.load_apps_dataset()
+MODEL_TARGET      = os.getenv("MODEL_TARGET")
+MODEL_OPTIMIZER   = os.getenv("MODEL_OPTIMIZER")
+N_VARIANTS        = int(os.getenv("N_VARIANTS", 5))
+N_PER_DIFFICULTY  = int(os.getenv("N_PER_DIFFICULTY", 10))
+APO_NUM_GRADIENTS = int(os.getenv("APO_NUM_GRADIENTS", 4))
+APO_BEAM_WIDTH    = int(os.getenv("APO_BEAM_WIDTH", 4))
+APO_MAX_ITERS     = int(os.getenv("APO_MAX_ITERS", 6))
 
-solver_chain = utils.build_solver_chain(model=os.getenv("MODEL_TARGET"))
-
-samples = utils.get_minibatch(
-    train_data,
-    n_per_difficulty=int(os.getenv("N_PER_DIFFICULTY", 50))
-)
-
-
-#Loop resampling
-for problem in tqdm(samples, desc="Problemi processati"):
-    baseline_code = utils.extract_code(
-        solver_chain.invoke({"user_prompt": problem["question"]})
-    )
-
-    variant_response = utils.resampling(
-        question=problem["question"],
-        solver_chain=solver_chain,
-        model=os.getenv("MODEL_OPTIMIZER"),
-        n_variants=int(os.getenv("N_VARIANTS", 5))
-    )
-
-    utils.saving_data(
-        variant_response=variant_response,
-        dataset=os.getenv("DATASET_NAME"),
-        question=problem["question"],
-        model_optimizer=os.getenv("MODEL_OPTIMIZER"),
-        model_target=os.getenv("MODEL_TARGET"),
-        difficulty=problem["difficulty"],
-        input_output=problem["input_output"],
-        baseline_code=baseline_code,
-        algorithm="resampling"
-    )
+OUTPUT_FILE   = f"results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+PASS_K_VALUES = [1, 3, 5, 10]
 
 
-# Loop Automatic Prompt Engineering
-CRITIQUE_SAMPLE_EVERY = 5
-for i, problem in enumerate(tqdm(samples, desc="Problemi processati")):
+def _pass_at_k(accuracies: list[float]) -> dict:
+    n = len(accuracies)
+    return {f"pass@{k}": round(utils.compute_pass_at_k(accuracies, k), 4) for k in PASS_K_VALUES if k <= n}
 
-    baseline_code = utils.extract_code(
-        solver_chain.invoke({"user_prompt": problem["question"]})
-    )
 
-    variant_response, critique = automatic_prompt_engineering(
-        user_prompt=problem["question"],
-        baseline_code=baseline_code,
-        target_model=os.getenv("MODEL_TARGET"),
-        socratic_model=os.getenv("MODEL_OPTIMIZER"),
-        n_variants=int(os.getenv("N_VARIANTS", 5))
-    )
+def main():
+    train_data, _ = utils.load_apps_dataset()
+    samples      = utils.get_minibatch(train_data, n_per_difficulty=N_PER_DIFFICULTY)
+    solver_chain = utils.build_solver_chain(model=MODEL_TARGET)
+    results      = []
 
-    utils.saving_data(
-        variant_response=variant_response,
-        dataset=os.getenv("DATASET_NAME"),
-        question=problem["question"],
-        model_optimizer=os.getenv("MODEL_OPTIMIZER"),
-        model_target=os.getenv("MODEL_TARGET"),
-        difficulty=problem["difficulty"],
-        input_output=problem["input_output"],
-        baseline_code=baseline_code,
-        algorithm="APO",
-        critique=critique if i % CRITIQUE_SAMPLE_EVERY == 0 else None
-    )
+    print(f"Campioni: {len(samples)} ({N_PER_DIFFICULTY} per difficoltà × 3 livelli)")
+    print(f"Output:   {OUTPUT_FILE}\n")
+
+    for idx, problem in enumerate(tqdm(samples, desc="Problemi")):
+        try:
+            io_data = json.loads(problem["input_output"])
+        except (json.JSONDecodeError, TypeError):
+            print(f"[{idx}] input_output non valido, skip.")
+            continue
+
+        if not io_data.get("inputs"):
+            print(f"[{idx}] Nessun test case, skip.")
+            continue
+
+        print(f"\n=== Problema {idx} [{problem['difficulty']}] ===")
+
+        n_test_cases  = len(io_data["inputs"])
+
+        # Zero-shot: target model sul prompt originale, nessuna ottimizzazione
+        original_code = utils.extract_code(solver_chain.invoke({"user_prompt": problem["question"]}))
+        zero_shot_acc = utils.evaluate_code(original_code, io_data)
+
+        baseline_result = run_baseline(
+            question=problem["question"], io_data=io_data,
+            solver_chain=solver_chain, model_optimizer=MODEL_OPTIMIZER,
+        )
+
+        ape_result = run_ape(
+            question=problem["question"], io_data=io_data,
+            solver_chain=solver_chain, model_optimizer=MODEL_OPTIMIZER, n_variants=N_VARIANTS,
+        )
+        ape_result["pass_at_k"] = _pass_at_k([v["accuracy"] for it in ape_result["iterations"] for v in it["variants"]])
+
+        apo_result = run_apo(
+            question=problem["question"], baseline_code=original_code, io_data=io_data,
+            solver_chain=solver_chain, model_target=MODEL_TARGET, model_optimizer=MODEL_OPTIMIZER,
+            num_gradients=APO_NUM_GRADIENTS, beam_width=APO_BEAM_WIDTH, max_iters=APO_MAX_ITERS,
+        )
+        apo_result["pass_at_k"] = _pass_at_k([c["accuracy"] for it in apo_result["iterations"] for c in it["all_candidates"]])
+
+        results.append({
+            "problem_idx":  idx,
+            "difficulty":   problem["difficulty"],
+            "n_test_cases": n_test_cases,
+            "question":     problem["question"],
+            "zero_shot":    {"accuracy": zero_shot_acc, "code": original_code},
+            "baseline":     baseline_result,
+            "APE":          ape_result,
+            "APO":          apo_result,
+        })
+
+        with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+            json.dump(results, f, ensure_ascii=False, indent=2)
+
+        print(
+            f"  zero_shot={zero_shot_acc:.3f} | "
+            f"baseline acc={baseline_result['accuracy']:.3f} | "
+            f"APE pass@1={ape_result['pass_at_k'].get('pass@1', '-')} | "
+            f"APO pass@1={apo_result['pass_at_k'].get('pass@1', '-')} "
+            f"[{n_test_cases} test cases]"
+        )
+
+    print(f"\nEsperimenti completati. Risultati in {OUTPUT_FILE}")
+
+
+if __name__ == "__main__":
+    main()
