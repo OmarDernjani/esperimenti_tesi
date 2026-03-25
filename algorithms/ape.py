@@ -52,5 +52,9 @@ def run_ape(
             no_improve += 1
             print(f"  [APE] Nessun miglioramento ({no_improve}/{max_no_improve}).")
 
+        if best_accuracy >= 1.0:
+            print(f"  [APE] Accuracy 1.0 raggiunta — stop anticipato.")
+            break
+
     print(f"[APE] Convergenza. Best: {best_accuracy:.3f}")
     return {"best_accuracy": best_accuracy, "iterations": iterations}

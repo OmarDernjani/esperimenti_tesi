@@ -121,6 +121,10 @@ def run_apo(
             "all_candidates": [{"prompt": c["prompt"], "accuracy": c["accuracy"]} for c in pool],
         })
 
+        if best_accuracy >= 1.0:
+            print(f"  [APO] Accuracy 1.0 raggiunta — stop anticipato.")
+            break
+
         if best_accuracy > best_so_far:
             best_so_far = best_accuracy
             no_improve  = 0
