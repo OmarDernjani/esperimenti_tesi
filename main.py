@@ -12,7 +12,10 @@ load_dotenv()
 MODEL_TARGET      = os.getenv("MODEL_TARGET")
 MODEL_OPTIMIZER   = os.getenv("MODEL_OPTIMIZER")
 N_VARIANTS        = int(os.getenv("N_VARIANTS", 5))
-N_PER_DIFFICULTY  = int(os.getenv("N_PER_DIFFICULTY", 10))
+N_INTRODUCTORY    = int(os.getenv("N_INTRODUCTORY", 10))
+N_INTERVIEW       = int(os.getenv("N_INTERVIEW", 20))
+N_COMPETITION     = int(os.getenv("N_COMPETITION", 30))
+MAX_TEST_CASES    = int(os.getenv("MAX_TEST_CASES", 10))
 APO_NUM_GRADIENTS = int(os.getenv("APO_NUM_GRADIENTS", 4))
 APO_BEAM_WIDTH    = int(os.getenv("APO_BEAM_WIDTH", 4))
 APO_MAX_ITERS     = int(os.getenv("APO_MAX_ITERS", 6))
@@ -28,11 +31,15 @@ def _pass_at_k(accuracies: list[float]) -> dict:
 
 def main():
     train_data, _ = utils.load_apps_dataset()
-    samples      = utils.get_minibatch(train_data, n_per_difficulty=N_PER_DIFFICULTY)
+    samples      = utils.get_minibatch(train_data, n_per_difficulty={
+        "introductory": N_INTRODUCTORY,
+        "interview":    N_INTERVIEW,
+        "competition":  N_COMPETITION,
+    }, min_test_cases=MAX_TEST_CASES)
     solver_chain = utils.build_solver_chain(model=MODEL_TARGET)
     results      = []
 
-    print(f"Campioni: {len(samples)} ({N_PER_DIFFICULTY} per difficoltà × 3 livelli)")
+    print(f"Campioni: {len(samples)} (intro={N_INTRODUCTORY}, interview={N_INTERVIEW}, competition={N_COMPETITION})")
     print(f"Output:   {OUTPUT_FILE}\n")
 
     for idx, problem in enumerate(tqdm(samples, desc="Problemi")):
@@ -45,6 +52,11 @@ def main():
         if not io_data.get("inputs"):
             print(f"[{idx}] Nessun test case, skip.")
             continue
+
+        # Tronca ai primi MAX_TEST_CASES test case per rendere la metrica
+        # comparabile tra difficoltà (evita il bias partial-credit).
+        io_data["inputs"]  = io_data["inputs"][:MAX_TEST_CASES]
+        io_data["outputs"] = io_data["outputs"][:MAX_TEST_CASES]
 
         print(f"\n=== Problema {idx} [{problem['difficulty']}] ===")
 

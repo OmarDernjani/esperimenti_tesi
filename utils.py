@@ -18,12 +18,44 @@ def load_apps_dataset():
     return APPS["train"], APPS["test"]
 
 
-def get_minibatch(data, n_per_difficulty: int = 10) -> list:
+def get_minibatch(
+    data,
+    n_per_difficulty: dict | int = 10,
+    min_test_cases: int = 5,
+    seed: int = 42,
+) -> list:
+    """Campiona problemi per difficoltà, escludendo quelli con meno di
+    min_test_cases test case per evitare bias nel calcolo dell'accuracy.
+
+    n_per_difficulty può essere un intero (stesso valore per tutte le difficoltà)
+    o un dict, es. {"introductory": 10, "interview": 20, "competition": 30}.
+    """
+    import json as _json
+    import random as _random
+    _random.seed(seed)
+
     difficulties = ["introductory", "interview", "competition"]
+    if isinstance(n_per_difficulty, int):
+        n_map = {d: n_per_difficulty for d in difficulties}
+    else:
+        n_map = n_per_difficulty
+
     samples = []
     for diff in difficulties:
-        indices = [i for i, d in enumerate(data["difficulty"]) if d == diff][:n_per_difficulty]
-        for i in indices:
+        n = n_map.get(diff, 10)
+        candidates = []
+        for i, d in enumerate(data["difficulty"]):
+            if d != diff:
+                continue
+            try:
+                io = _json.loads(data["input_output"][i])
+                n_tc = len(io.get("inputs", []))
+            except Exception:
+                n_tc = 0
+            if n_tc >= min_test_cases:
+                candidates.append(i)
+        chosen = _random.sample(candidates, min(n, len(candidates)))
+        for i in chosen:
             samples.append({
                 "question":     data["question"][i],
                 "difficulty":   data["difficulty"][i],
