@@ -24,12 +24,7 @@ def get_minibatch(
     min_test_cases: int = 5,
     seed: int = 42,
 ) -> list:
-    """Campiona problemi per difficoltà, escludendo quelli con meno di
-    min_test_cases test case per evitare bias nel calcolo dell'accuracy.
-
-    n_per_difficulty può essere un intero (stesso valore per tutte le difficoltà)
-    o un dict, es. {"introductory": 10, "interview": 20, "competition": 30}.
-    """
+    
     import json as _json
     import random as _random
     _random.seed(seed)
@@ -79,7 +74,7 @@ def build_solver_chain(model: str = "mistral-nemo"):
 
 
 def extract_code(response: str) -> str:
-    """Estrae il blocco di codice Python da una risposta in markdown."""
+    
     for pattern in [r"```python(.*?)```", r"```py(.*?)```", r"```(.*?)```"]:
         matches = re.findall(pattern, response, re.DOTALL)
         if matches:
@@ -89,7 +84,7 @@ def extract_code(response: str) -> str:
         candidates = [m.strip() for m in pipe_match if len(m.strip()) > 20]
         if candidates:
             return max(candidates, key=len)
-    # fallback: rimuovi eventuali fence residue che il modello non ha chiuso
+        
     code = response.strip()
     code = re.sub(r'^```(?:python|py)?\s*\n?', '', code)
     code = re.sub(r'\n?```\s*$', '', code)
@@ -97,7 +92,7 @@ def extract_code(response: str) -> str:
 
 
 def resampling(question: str, solver_chain, model: str = "llama3.1:8b", n_variants: int = 5) -> list:
-    """Genera n_variants riformulazioni del problema e per ognuna invoca solver_chain."""
+    
     template = ChatPromptTemplate([
         ("system",
          f"You are a prompt resampler. Given a competitive programming problem, generate EXACTLY {n_variants} "
@@ -117,7 +112,7 @@ def resampling(question: str, solver_chain, model: str = "llama3.1:8b", n_varian
     chain = template | llm | StrOutputParser()
     response = chain.invoke({"user_prompt": question})
     resampled = [item.strip() for item in response.split("|") if item.strip() and item.strip() != "\n\n"]
-    # fallback: se il modello non ha usato i delimitatori, prova a splittare su numerazione (1. 2. ...)
+    
     if len(resampled) < 2:
         resampled = re.split(r'\n\s*\d+\.\s+', response)
         resampled = [item.strip() for item in resampled if len(item.strip()) > 50]
@@ -151,7 +146,7 @@ def _normalize(text: str) -> str:
 
 
 def evaluate_code(code: str, io_data: dict) -> float:
-    """Esegue il codice sui test case e restituisce la frazione di test passati."""
+    
     inputs = io_data.get("inputs", [])
     if not inputs:
         return 0.0
@@ -175,7 +170,7 @@ def evaluate_code(code: str, io_data: dict) -> float:
 
 
 def get_failing_tests(code: str, io_data: dict, max_failures: int = 3) -> list[dict]:
-    """Restituisce i primi max_failures test case falliti (usati come segnale di errore in APO)."""
+
     inputs  = io_data.get("inputs", [])
     outputs = io_data.get("outputs", [])
     failures = []
@@ -202,7 +197,6 @@ def get_failing_tests(code: str, io_data: dict, max_failures: int = 3) -> list[d
 
 
 def compute_pass_at_k(accuracies: list[float], k: int) -> float:
-    """pass@k = 1 - C(n-c, k) / C(n, k), dove c = campioni con accuracy == 1.0."""
     n = len(accuracies)
     c = sum(1 for a in accuracies if a == 1.0)
     if n == 0 or k > n:

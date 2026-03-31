@@ -1,10 +1,3 @@
-"""
-APO — Automatic Prompt Optimization con gradienti testuali (Pryzant et al., 2023).
-Differenze rispetto ad APE:
-  - Beam search di larghezza b: mantiene i top-b prompt a ogni iterazione
-  - Gradiente diretto: i test case falliti guidano la critica e la riscrittura del prompt
-"""
-
 from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser

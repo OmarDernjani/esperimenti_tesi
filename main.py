@@ -3,7 +3,6 @@ import os
 import json
 from datetime import datetime
 from tqdm import tqdm
-
 import utils
 from algorithms import run_baseline, run_ape, run_apo
 
@@ -26,6 +25,7 @@ PASS_K_VALUES = [1, 3, 5, 10]
 
 def _pass_at_k(accuracies: list[float]) -> dict:
     n = len(accuracies)
+
     return {f"pass@{k}": round(utils.compute_pass_at_k(accuracies, k), 4) for k in PASS_K_VALUES if k <= n}
 
 
@@ -35,12 +35,15 @@ def main():
         "introductory": N_INTRODUCTORY,
         "interview":    N_INTERVIEW,
         "competition":  N_COMPETITION,
-    }, min_test_cases=MAX_TEST_CASES)
+    },
+    min_test_cases=MAX_TEST_CASES
+    )
+
     solver_chain = utils.build_solver_chain(model=MODEL_TARGET)
     results      = []
 
-    print(f"Campioni: {len(samples)} (intro={N_INTRODUCTORY}, interview={N_INTERVIEW}, competition={N_COMPETITION})")
-    print(f"Output:   {OUTPUT_FILE}\n")
+    print(f"numero caampioni: {len(samples)} (intro={N_INTRODUCTORY}, interview={N_INTERVIEW}, competition={N_COMPETITION})")
+    print(f"output:   {OUTPUT_FILE}\n")
 
     for idx, problem in enumerate(tqdm(samples, desc="Problemi")):
         try:
@@ -53,16 +56,15 @@ def main():
             print(f"[{idx}] Nessun test case, skip.")
             continue
 
-        # Tronca ai primi MAX_TEST_CASES test case per rendere la metrica
-        # comparabile tra difficoltà (evita il bias partial-credit).
+        
         io_data["inputs"]  = io_data["inputs"][:MAX_TEST_CASES]
         io_data["outputs"] = io_data["outputs"][:MAX_TEST_CASES]
 
-        print(f"\n=== Problema {idx} [{problem['difficulty']}] ===")
+        print(f"\n Problema {idx} [{problem['difficulty']}]")
 
         n_test_cases  = len(io_data["inputs"])
 
-        # Zero-shot: target model sul prompt originale, nessuna ottimizzazione
+        # Zero-shot
         original_code = utils.extract_code(solver_chain.invoke({"user_prompt": problem["question"]}))
         zero_shot_acc = utils.evaluate_code(original_code, io_data)
 
@@ -98,15 +100,7 @@ def main():
         with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
             json.dump(results, f, ensure_ascii=False, indent=2)
 
-        print(
-            f"  zero_shot={zero_shot_acc:.3f} | "
-            f"baseline acc={baseline_result['accuracy']:.3f} | "
-            f"APE pass@1={ape_result['pass_at_k'].get('pass@1', '-')} | "
-            f"APO pass@1={apo_result['pass_at_k'].get('pass@1', '-')} "
-            f"[{n_test_cases} test cases]"
-        )
-
-    print(f"\nEsperimenti completati. Risultati in {OUTPUT_FILE}")
+    print(f"\nEsperimenti completati.")
 
 
 if __name__ == "__main__":

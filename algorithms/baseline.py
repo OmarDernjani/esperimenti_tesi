@@ -1,8 +1,3 @@
-"""
-Baseline: il modello optimizer riscrive il prompt una volta,
-poi il modello target genera UN SOLO codice dalla versione riscritta (nessun resampling).
-"""
-
 from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser

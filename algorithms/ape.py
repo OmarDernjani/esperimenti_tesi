@@ -1,9 +1,3 @@
-"""
-APE — Automatic Prompt Engineering (Zhou et al., 2022).
-Ricampiona iterativamente il miglior prompt trovato; si ferma dopo
-max_no_improve iterazioni consecutive senza miglioramento (beam width = 1).
-"""
-
 from utils import resampling, evaluate_code
 
 MAX_NO_IMPROVE = 2
