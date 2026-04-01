@@ -29,17 +29,30 @@ def get_minibatch(
     import random as _random
     _random.seed(seed)
 
+    #mappa i differenti valori per difficoltà
     difficulties = ["introductory", "interview", "competition"]
+
     if isinstance(n_per_difficulty, int):
+
+        #se n_per_difficulty è un int allora assegna a ogni key difficoltà il valore di int
         n_map = {d: n_per_difficulty for d in difficulties}
     else:
+
+        # se è un dizionario assegna i valori personalizzati (utilizzo nel caso di sample sbilanciati)
         n_map = n_per_difficulty
 
     samples = []
     for diff in difficulties:
+
+        #se trova la difficoltà ritorna il numero di sample associato alla difficoltà es: {'introductory': 10}
+        #altrimenti, se non trova la difficoltà, ritorna 10 come output standard
         n = n_map.get(diff, 10)
+
         candidates = []
+
         for i, d in enumerate(data["difficulty"]):
+
+            #blocco che gestisce il caso in cui una key non è una difficulty, ricarica i dati
             if d != diff:
                 continue
             try:
@@ -47,9 +60,16 @@ def get_minibatch(
                 n_tc = len(io.get("inputs", []))
             except Exception:
                 n_tc = 0
+            
+            #se il numero dei test case delle singole entrate del dataset >= min_test_cases allora aggiungo ai candidati
             if n_tc >= min_test_cases:
                 candidates.append(i)
+        
+        #candidati scelti randomicamente nella lista dei candidati
         chosen = _random.sample(candidates, min(n, len(candidates)))
+
+        #aggiunge ai sample gli scelti randomicamente, dove sample è del tipo:
+        #sample = {'question': question, difficulty = 'introductory/...', input_output = 'IO' (test cases)}
         for i in chosen:
             samples.append({
                 "question":     data["question"][i],
@@ -59,14 +79,29 @@ def get_minibatch(
     return samples
 
 
-def build_solver_chain(model: str = "mistral-nemo"):
+def build_solver_chain(model: str = "mistral-nemo", call_based: bool = False, fn_name: str = ""):
+    if call_based:
+        system_msg = (
+            "You are a helpful assistant for coding. "
+            "Implement ONLY the Python function described by the user. "
+            f"The function MUST be named exactly `{fn_name}`. "
+            "Do NOT read from stdin or print anything. "
+            "Do NOT include test cases, example usage, or explanations. "
+            "Wrap the code in a markdown Python code block: ```python ... ```"
+        )
+    else:
+        system_msg = (
+            "You are a helpful assistant for coding. "
+            "Write a complete, standalone Python script that solves the competitive programming problem described by the user. "
+            "Read input with `import sys` and `data = sys.stdin.read()`, then parse it "
+            "(e.g. `tokens = data.split()` for numeric problems, or `lines = data.splitlines()` for line-oriented problems). "
+            "NEVER call `sys.stdin.read()`, `sys.stdin.readline()`, `sys.stdin.readlines()`, or `input()` more than once. "
+            "Process the data, print the output, and exit cleanly. "
+            "Do not include test cases, example usage, or explanations. "
+            "Wrap the code in a markdown Python code block: ```python ... ```"
+        )
     template = ChatPromptTemplate([
-        ("system",
-         "You are a helpful assistant for coding. "
-         "Write a complete, standalone Python script that solves the competitive programming problem described by the user. "
-         "The script must read input from stdin (using input() or sys.stdin) and print the result to stdout. "
-         "Do not include test cases, example usage, or explanations. "
-         "Wrap the code in a markdown Python code block: ```python ... ```"),
+        ("system", system_msg),
         ("human", "{user_prompt}"),
     ])
     llm = ChatOllama(model=model, num_ctx=4096, num_keep=0)
@@ -112,10 +147,12 @@ def resampling(question: str, solver_chain, model: str = "llama3.1:8b", n_varian
     chain = template | llm | StrOutputParser()
     response = chain.invoke({"user_prompt": question})
     resampled = [item.strip() for item in response.split("|") if item.strip() and item.strip() != "\n\n"]
-    
+
     if len(resampled) < 2:
         resampled = re.split(r'\n\s*\d+\.\s+', response)
         resampled = [item.strip() for item in resampled if len(item.strip()) > 50]
+
+    resampled = resampled[:n_variants]
     return [
         {"prompt": prompt, "code": extract_code(solver_chain.invoke({"user_prompt": prompt}))}
         for prompt in resampled
@@ -141,19 +178,80 @@ def _run_script(file_path: str, test_input: str) -> dict:
         return {"success": False, "error": str(e)}
 
 
+def _run_call_based(code: str, fn_name: str, args: list) -> dict:
+    import json as _json
+    harness = code + "\n\n"
+    harness += f"import json as __json, sys as __sys\n"
+    harness += f"__args = __json.loads(__sys.stdin.read())\n"
+    harness += f"__result = {fn_name}(*__args)\n"
+    harness += f"print(__json.dumps(__result))\n"
+    fd, path = tempfile.mkstemp(suffix=".py")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(harness)
+        proc = subprocess.Popen(
+            [sys.executable, path],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8",
+        )
+        try:
+            stdout, stderr = proc.communicate(input=_json.dumps(args), timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill(); proc.communicate()
+            return {"success": False, "error": "Timeout"}
+        if proc.returncode == 0:
+            try:
+                return {"success": True, "output": _json.loads(stdout.strip())}
+            except _json.JSONDecodeError:
+                return {"success": True, "output": stdout.strip()}
+        return {"success": False, "error": stderr}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+
+
 def _normalize(text: str) -> str:
     return "\n".join(line.rstrip() for line in text.splitlines()).strip()
 
 
+def is_call_based(io_data: dict) -> bool:
+    return bool(io_data.get("fn_name"))
+
+
+def _unwrap_expected(expected):
+    """APPS wraps call-based outputs in a single-element list. Unwrap it."""
+    if isinstance(expected, list) and len(expected) == 1:
+        return expected[0]
+    return expected
+
+
 def evaluate_code(code: str, io_data: dict) -> float:
-    
+
     inputs = io_data.get("inputs", [])
+
     if not inputs:
         return 0.0
+
+    fn_name = io_data.get("fn_name")
+
+    if fn_name:
+        # call-based: inputs/outputs are lists of arguments/return values
+        passed = 0
+        for args, expected in zip(inputs, io_data.get("outputs", [])):
+            result = _run_call_based(code, fn_name, args)
+            if result["success"] and result["output"] == _unwrap_expected(expected):
+                passed += 1
+        return passed / len(inputs)
+
+    # stdin-based
     fd, path = tempfile.mkstemp(suffix=".py")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(code)
+
         passed = 0
         for inp, exp in zip(inputs, io_data.get("outputs", [])):
             result = _run_script(path, inp)
@@ -173,7 +271,33 @@ def get_failing_tests(code: str, io_data: dict, max_failures: int = 3) -> list[d
 
     inputs  = io_data.get("inputs", [])
     outputs = io_data.get("outputs", [])
+    fn_name = io_data.get("fn_name")
     failures = []
+
+    if fn_name:
+        # call-based
+        for args, expected_raw in zip(inputs, outputs):
+            if len(failures) >= max_failures:
+                break
+            expected = _unwrap_expected(expected_raw)
+            result = _run_call_based(code, fn_name, args)
+            if result["success"]:
+                if result["output"] != expected:
+                    failures.append({
+                        "input": str(args)[:300],
+                        "expected": str(expected)[:300],
+                        "actual": str(result["output"])[:300],
+                    })
+            else:
+        
+                failures.append({
+                    "input": str(args)[:300],
+                    "expected": str(expected)[:300],
+                    "error": result["error"][:300],
+                })
+        return failures
+
+    # stdin-based
     fd, path = tempfile.mkstemp(suffix=".py")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:

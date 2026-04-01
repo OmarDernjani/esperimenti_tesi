@@ -39,7 +39,6 @@ def main():
     min_test_cases=MAX_TEST_CASES
     )
 
-    solver_chain = utils.build_solver_chain(model=MODEL_TARGET)
     results      = []
 
     print(f"numero caampioni: {len(samples)} (intro={N_INTRODUCTORY}, interview={N_INTERVIEW}, competition={N_COMPETITION})")
@@ -56,13 +55,18 @@ def main():
             print(f"[{idx}] Nessun test case, skip.")
             continue
 
-        
+
         io_data["inputs"]  = io_data["inputs"][:MAX_TEST_CASES]
         io_data["outputs"] = io_data["outputs"][:MAX_TEST_CASES]
 
-        print(f"\n Problema {idx} [{problem['difficulty']}]")
+        fn_name    = io_data.get("fn_name", "")
+        call_based = bool(fn_name)
+
+        print(f"\n Problema {idx} [{problem['difficulty']}] {'(call-based: ' + fn_name + ')' if call_based else '(stdin-based)'}")
 
         n_test_cases  = len(io_data["inputs"])
+
+        solver_chain = utils.build_solver_chain(model=MODEL_TARGET, call_based=call_based, fn_name=fn_name)
 
         # Zero-shot
         original_code = utils.extract_code(solver_chain.invoke({"user_prompt": problem["question"]}))
