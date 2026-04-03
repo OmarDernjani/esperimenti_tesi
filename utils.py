@@ -8,6 +8,7 @@ from datasets import load_dataset
 from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableLambda
 
 
 def load_apps_dataset():
@@ -79,7 +80,8 @@ def get_minibatch(
     return samples
 
 
-def build_solver_chain(model: str = "mistral-nemo", call_based: bool = False, fn_name: str = ""):
+def build_direct_chain(model: str = "llama3.1:8b", call_based: bool = False, fn_name: str = ""):
+
     if call_based:
         system_msg = (
             "You are a helpful assistant for coding. "
@@ -100,12 +102,66 @@ def build_solver_chain(model: str = "mistral-nemo", call_based: bool = False, fn
             "Do not include test cases, example usage, or explanations. "
             "Wrap the code in a markdown Python code block: ```python ... ```"
         )
+
     template = ChatPromptTemplate([
         ("system", system_msg),
         ("human", "{user_prompt}"),
     ])
     llm = ChatOllama(model=model, num_ctx=4096, num_keep=0)
     return template | llm | StrOutputParser()
+
+
+def build_solver_chain(model_optimizer: str = "mistral-nemo", model_target: str = "llama3.1:8b", call_based: bool = False, fn_name: str = ""):
+
+    if call_based:
+        strict_rules = (
+            "- Instruct the target LLM to implement ONLY the Python function described.\n"
+            f"- Instruct the target LLM that the function MUST be named exactly `{fn_name}`.\n"
+            "- Instruct the target LLM to NOT read from stdin or print anything.\n"
+        )
+    else:
+        strict_rules = (
+            "- Instruct the target LLM to write a complete, standalone Python script.\n"
+            "- Instruct the target LLM to read input with `import sys` and `data = sys.stdin.read()`, then parse it.\n"
+            "- Instruct the target LLM to NEVER call `sys.stdin.read()`, `sys.stdin.readline()`, `sys.stdin.readlines()`, or `input()` more than once.\n"
+            "- Instruct the target LLM to process the data, print the output, and exit cleanly.\n"
+        )
+    
+    
+    common_rules = (
+        "- Instruct the target LLM to NOT include test cases, example usage, or explanations in the final output.\n"
+        "- Instruct the target LLM to wrap the code in a markdown Python code block: ```python ... ```\n"
+    )
+
+    
+    system_msg = (
+        "You are an expert prompt engineer.\n\n"
+        "Your task is to write a prompt that will help a target LLM to solve a coding problem correctly.\n\n"
+        "The prompt you write MUST:\n"
+        "- Clearly restate the problem to be solved\n"
+        "- Encourage step-by-step reasoning\n"
+        "- Ask for efficient code\n\n"
+        "CRITICAL: To fit our execution pipeline, the prompt you generate MUST ALSO strictly command the target LLM to follow these rules:\n"
+        f"{strict_rules}"
+        f"{common_rules}\n"
+        "Return ONLY the final prompt."
+    )
+
+    template = ChatPromptTemplate([
+        ("system", system_msg),
+        ("human", "Problem:\n{user_prompt}"),
+    ])
+
+    llm_opt = ChatOllama(model=model_optimizer, num_ctx=4096, num_keep=0)
+    prompt_chain = template | llm_opt | StrOutputParser()
+
+    target_template = ChatPromptTemplate([
+        ("human", "{generated_prompt}"),
+    ])
+    llm_tgt = ChatOllama(model=model_target, num_ctx=4096, num_keep=0)
+    target_chain = target_template | llm_tgt | StrOutputParser()
+
+    return prompt_chain | RunnableLambda(lambda p: target_chain.invoke({"generated_prompt": p}))
 
 
 def extract_code(response: str) -> str:

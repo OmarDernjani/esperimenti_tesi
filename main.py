@@ -11,9 +11,9 @@ load_dotenv()
 MODEL_TARGET      = os.getenv("MODEL_TARGET")
 MODEL_OPTIMIZER   = os.getenv("MODEL_OPTIMIZER")
 N_VARIANTS        = int(os.getenv("N_VARIANTS", 5))
-N_INTRODUCTORY    = int(os.getenv("N_INTRODUCTORY", 10))
-N_INTERVIEW       = int(os.getenv("N_INTERVIEW", 20))
-N_COMPETITION     = int(os.getenv("N_COMPETITION", 30))
+N_INTRODUCTORY    = int(os.getenv("N_INTRODUCTORY", 5))
+N_INTERVIEW       = int(os.getenv("N_INTERVIEW", 5))
+N_COMPETITION     = int(os.getenv("N_COMPETITION", 5))
 MAX_TEST_CASES    = int(os.getenv("MAX_TEST_CASES", 10))
 APO_NUM_GRADIENTS = int(os.getenv("APO_NUM_GRADIENTS", 4))
 APO_BEAM_WIDTH    = int(os.getenv("APO_BEAM_WIDTH", 4))
@@ -66,10 +66,11 @@ def main():
 
         n_test_cases  = len(io_data["inputs"])
 
-        solver_chain = utils.build_solver_chain(model=MODEL_TARGET, call_based=call_based, fn_name=fn_name)
+        direct_chain = utils.build_direct_chain(model=MODEL_TARGET, call_based=call_based, fn_name=fn_name)
+        solver_chain = utils.build_solver_chain(model_optimizer=MODEL_OPTIMIZER, model_target=MODEL_TARGET, call_based=call_based, fn_name=fn_name)
 
-        # Zero-shot
-        original_code = utils.extract_code(solver_chain.invoke({"user_prompt": problem["question"]}))
+        # Zero-shot (diretto al target, nessun prompt engineering)
+        original_code = utils.extract_code(direct_chain.invoke({"user_prompt": problem["question"]}))
         zero_shot_acc = utils.evaluate_code(original_code, io_data)
 
         baseline_result = run_baseline(
