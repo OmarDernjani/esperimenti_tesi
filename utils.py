@@ -19,6 +19,27 @@ def load_apps_dataset():
     return APPS["train"], APPS["test"]
 
 
+def load_humaneval_dataset():
+    ds = load_dataset("openai/openai_humaneval")
+    return ds["test"]
+
+
+def get_humaneval_sample(data, n: int = 20, seed: int = 42) -> list:
+    import random as _random
+    _random.seed(seed)
+    indices = list(range(len(data)))
+    chosen = _random.sample(indices, min(n, len(indices)))
+    return [
+        {
+            "task_id":      data[i]["task_id"],
+            "prompt":       data[i]["prompt"],
+            "test":         data[i]["test"],
+            "entry_point":  data[i]["entry_point"],
+        }
+        for i in chosen
+    ]
+
+
 def get_minibatch(
     data,
     n_per_difficulty: dict | int = 10,
@@ -273,6 +294,51 @@ def _normalize(text: str) -> str:
     return "\n".join(line.rstrip() for line in text.splitlines()).strip()
 
 
+# ── HumanEval assertion helpers ──────────────────────────────────────
+
+def _extract_assertions(test_code: str) -> list[str]:
+    """Extract individual assert lines from HumanEval check(candidate) function."""
+    assertions = []
+    in_check = False
+    for line in test_code.split('\n'):
+        stripped = line.strip()
+        if 'def check(' in stripped:
+            in_check = True
+            continue
+        if in_check and stripped.startswith('assert '):
+            assertions.append(stripped)
+    return assertions
+
+
+def _run_single_assertion(code: str, assertion: str, entry_point: str) -> dict:
+    """Run one HumanEval assertion against generated code."""
+    assertion_fixed = assertion.replace('candidate', entry_point)
+    script = code + "\n\n" + assertion_fixed + "\n"
+    fd, path = tempfile.mkstemp(suffix=".py")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(script)
+        proc = subprocess.Popen(
+            [sys.executable, path],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8",
+        )
+        try:
+            stdout, stderr = proc.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill(); proc.communicate()
+            return {"success": False, "error": "Timeout"}
+        if proc.returncode == 0:
+            return {"success": True}
+        return {"success": False, "error": stderr}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+
+
 def is_call_based(io_data: dict) -> bool:
     return bool(io_data.get("fn_name"))
 
@@ -286,6 +352,18 @@ def _unwrap_expected(expected):
 
 def evaluate_code(code: str, io_data: dict) -> float:
 
+    # ── HumanEval (assertion-based) ──
+    if io_data.get("humaneval"):
+        assertions = _extract_assertions(io_data["test_code"])
+        if not assertions:
+            return 0.0
+        passed = sum(
+            1 for a in assertions
+            if _run_single_assertion(code, a, io_data["entry_point"])["success"]
+        )
+        return passed / len(assertions)
+
+    # ── APPS ──
     inputs = io_data.get("inputs", [])
 
     if not inputs:
@@ -325,6 +403,24 @@ def evaluate_code(code: str, io_data: dict) -> float:
 
 def get_failing_tests(code: str, io_data: dict, max_failures: int = 3) -> list[dict]:
 
+    # ── HumanEval (assertion-based) ──
+    if io_data.get("humaneval"):
+        assertions = _extract_assertions(io_data["test_code"])
+        failures = []
+        for assertion in assertions:
+            if len(failures) >= max_failures:
+                break
+            result = _run_single_assertion(code, assertion, io_data["entry_point"])
+            if not result["success"]:
+                assertion_display = assertion.replace('candidate', io_data["entry_point"])
+                failures.append({
+                    "input":    assertion_display[:300],
+                    "expected": "assertion pass",
+                    "error":    result.get("error", "AssertionError")[:300],
+                })
+        return failures
+
+    # ── APPS ──
     inputs  = io_data.get("inputs", [])
     outputs = io_data.get("outputs", [])
     fn_name = io_data.get("fn_name")
