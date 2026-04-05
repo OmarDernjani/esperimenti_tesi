@@ -1,6 +1,7 @@
 from utils import resampling, evaluate_code
 
 MAX_NO_IMPROVE = 2
+MAX_ITERS      = 2
 
 
 def run_ape(
@@ -9,18 +10,18 @@ def run_ape(
     solver_chain,
     model_optimizer: str,
     n_variants: int = 5,
+    max_iters: int = MAX_ITERS,
     max_no_improve: int = MAX_NO_IMPROVE,
 ) -> dict:
-    print("\n[APE] Avvio")
+    print(f"\n[APE] Avvio — max_iters={max_iters}")
 
     best_prompt   = question
     best_accuracy = 0.0
     no_improve    = 0
     iterations    = []
 
-    while no_improve < max_no_improve:
-        iter_num = len(iterations) + 1
-        print(f"  [APE] Iter {iter_num} — generazione varianti …")
+    for iter_num in range(1, max_iters + 1):
+        print(f"  [APE] Iter {iter_num}/{max_iters} — generazione varianti …")
 
         variants   = resampling(best_prompt, solver_chain, model_optimizer, n_variants)
         accuracies = [evaluate_code(v["code"], io_data) for v in variants]
@@ -45,6 +46,9 @@ def run_ape(
         else:
             no_improve += 1
             print(f"  [APE] Nessun miglioramento ({no_improve}/{max_no_improve}).")
+            if no_improve >= max_no_improve:
+                print(f"  [APE] Convergenza dopo {iter_num} iterazioni.")
+                break
 
         if best_accuracy >= 1.0:
             print(f"  [APE] Accuracy 1.0 raggiunta — stop anticipato.")
