@@ -6,4 +6,3 @@ __pycache__
 resume_missing.py
 *.json
 *.txt
-result
