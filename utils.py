@@ -1,6 +1,7 @@
 import re
 import sys
 import os
+import ast
 import math
 import subprocess
 import tempfile
@@ -8,7 +9,10 @@ from datasets import load_dataset
 from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableLambda
+
+# ── Global execution / model knobs (env-tunable) ────────────────────────────
+NUM_CTX        = int(os.environ.get("NUM_CTX", "8192"))
+EXEC_TIMEOUT   = int(os.environ.get("EXEC_TIMEOUT", "10"))
 
 
 def load_apps_dataset():
@@ -24,10 +28,13 @@ def load_humaneval_dataset():
     return ds["test"]
 
 
-def get_humaneval_sample(data, n: int = 20, seed: int = 42) -> list:
+def get_humaneval_sample(data, n: int = 20, seed: int = 42, min_assertions: int = 6) -> list:
     import random as _random
     _random.seed(seed)
-    indices = list(range(len(data)))
+    indices = [
+        i for i in range(len(data))
+        if len(_extract_assertions(data[i]["test"])) >= min_assertions
+    ]
     chosen = _random.sample(indices, min(n, len(indices)))
     return [
         {
@@ -101,7 +108,7 @@ def get_minibatch(
     return samples
 
 
-def build_direct_chain(model: str = "llama3.1:8b", call_based: bool = False, fn_name: str = ""):
+def build_target_chain(model: str = "llama3.1:8b", call_based: bool = False, fn_name: str = ""):
 
     if call_based:
         system_msg = (
@@ -128,122 +135,177 @@ def build_direct_chain(model: str = "llama3.1:8b", call_based: bool = False, fn_
         ("system", system_msg),
         ("human", "{user_prompt}"),
     ])
-    llm = ChatOllama(model=model, num_ctx=4096, num_keep=0)
+    llm = ChatOllama(model=model, num_ctx=NUM_CTX, num_keep=0)
     return template | llm | StrOutputParser()
 
 
-def build_solver_chain(model_optimizer: str = "mistral-nemo", model_target: str = "llama3.1:8b", call_based: bool = False, fn_name: str = ""):
+def build_optimizer_chain(model: str = "mistral-nemo"):
+    """
+    Optimizer chain only. Takes a raw coding problem and produces an enriched
+    prompt that wraps the ORIGINAL problem with role + solution scaffolding.
+    Pipeline rules (function name, I/O, markdown) are NOT injected here:
+    they live in the target chain's system prompt.
+    """
+    model_target = os.environ.get("MODEL_TARGET", "")
+    target_mention = (
+        f"The target LLM you are optimizing for is `{model_target}`.\n"
+        "Tailor your scaffolding to the strengths and weaknesses of this model.\n\n"
+    ) if model_target else ""
 
-    if call_based:
-        strict_rules = (
-            "- Instruct the target LLM to implement ONLY the Python function described.\n"
-            f"- Instruct the target LLM that the function MUST be named exactly `{fn_name}`.\n"
-            "- Instruct the target LLM to NOT read from stdin or print anything.\n"
-        )
-    else:
-        strict_rules = (
-            "- Instruct the target LLM to write a complete, standalone Python script.\n"
-            "- Instruct the target LLM to read input with `import sys` and `data = sys.stdin.read()`, then parse it.\n"
-            "- Instruct the target LLM to NEVER call `sys.stdin.read()`, `sys.stdin.readline()`, `sys.stdin.readlines()`, or `input()` more than once.\n"
-            "- Instruct the target LLM to process the data, print the output, and exit cleanly.\n"
-        )
-    
-    
-    common_rules = (
-        "- Instruct the target LLM to NOT include test cases, example usage, or explanations in the final output.\n"
-        "- Instruct the target LLM to wrap the code in a markdown Python code block: ```python ... ```\n"
-    )
-
-    
     system_msg = (
-        "You are an expert prompt engineer.\n\n"
-        "Your task is to write a prompt that will help a target LLM to solve a coding problem correctly.\n\n"
-        "The prompt you write MUST:\n"
-        "- Clearly restate the problem to be solved\n"
-        "- Encourage step-by-step reasoning\n"
-        "- Ask for efficient code\n\n"
-        "CRITICAL: To fit our execution pipeline, the prompt you generate MUST ALSO strictly command the target LLM to follow these rules:\n"
-        f"{strict_rules}"
-        f"{common_rules}\n"
-        "Return ONLY the final prompt."
+        "You are an expert prompt engineer specializing in code generation.\n\n"
+        f"{target_mention}"
+        "You will receive a coding problem. Your task is NOT to rewrite or rephrase it.\n"
+        "Your task is to produce an enriched prompt that wraps the ORIGINAL problem with\n"
+        "scaffolding that helps the target LLM solve it correctly.\n\n"
+        "The prompt you produce MUST:\n\n"
+        "1. Assign the target LLM an expert role relevant to the problem\n"
+        "   (e.g. \"expert competitive programmer\", \"Python algorithms specialist\").\n\n"
+        "2. Include the ORIGINAL problem text VERBATIM — copy it exactly as given.\n"
+        "   Do NOT paraphrase, summarize, shorten, or omit examples, constraints,\n"
+        "   or input/output format.\n\n"
+        "3. After the problem, add a \"## Solution guidance\" section containing:\n"
+        "   - A short decomposition of the problem into 2-4 algorithmic sub-steps\n"
+        "   - 1-2 non-trivial edge cases the model should explicitly handle\n"
+        "   - The expected algorithmic approach and a target time complexity, if inferable\n"
+        "   - Any data-structure hints that would simplify the implementation\n\n"
+        "4. Instruct the target LLM to reason step-by-step BEFORE writing code,\n"
+        "   then produce the final implementation.\n\n"
+        "Do NOT add execution rules (function name, I/O handling, markdown wrapping).\n"
+        "Those are appended automatically downstream.\n\n"
+        "Return ONLY the final prompt for the target LLM. No preamble, no commentary."
     )
 
     template = ChatPromptTemplate([
         ("system", system_msg),
-        ("human", "Problem:\n{user_prompt}"),
+        ("human", "Problem:\n{problem}"),
     ])
-
-    llm_opt = ChatOllama(model=model_optimizer, num_ctx=4096, num_keep=0)
-    prompt_chain = template | llm_opt | StrOutputParser()
-
-    target_template = ChatPromptTemplate([
-        ("human", "{generated_prompt}"),
-    ])
-    llm_tgt = ChatOllama(model=model_target, num_ctx=4096, num_keep=0)
-    target_chain = target_template | llm_tgt | StrOutputParser()
-
-    return prompt_chain | RunnableLambda(lambda p: target_chain.invoke({"generated_prompt": p}))
+    llm = ChatOllama(model=model, num_ctx=NUM_CTX, num_keep=0)
+    return template | llm | StrOutputParser()
 
 
 def extract_code(response: str) -> str:
-    
-    for pattern in [r"```python(.*?)```", r"```py(.*?)```", r"```(.*?)```"]:
+    """
+    Extract a Python code block from an LLM response.
+
+    Strategy:
+      1. Look for fenced blocks ```python ... ``` (or ```py / plain ```), pick
+         the longest match. Handles multiple fenced blocks in one response.
+      2. If no closing fence, but the response opens with ```python / ```py /
+         ```, take everything after the opening fence.
+      3. Otherwise return the whole response stripped — let the executor fail
+         on malformed output rather than guessing with fragile heuristics.
+    """
+    # ── 1. Properly fenced blocks ──
+    for pattern in [r"```python\s*\n?(.*?)```", r"```py\s*\n?(.*?)```", r"```\s*\n?(.*?)```"]:
         matches = re.findall(pattern, response, re.DOTALL)
         if matches:
             return max(matches, key=len).strip()
-    pipe_match = re.findall(r"\|([^|]+)\|", response, re.DOTALL)
-    if pipe_match:
-        candidates = [m.strip() for m in pipe_match if len(m.strip()) > 20]
-        if candidates:
-            return max(candidates, key=len)
-        
-    code = response.strip()
-    code = re.sub(r'^```(?:python|py)?\s*\n?', '', code)
-    code = re.sub(r'\n?```\s*$', '', code)
-    return code
+
+    # ── 2. Unclosed opening fence ──
+    open_match = re.search(r"```(?:python|py)?\s*\n?(.*)$", response, re.DOTALL)
+    if open_match:
+        return open_match.group(1).strip()
+
+    # ── 3. Plain text fallback ──
+    return response.strip()
 
 
-def resampling(question: str, solver_chain, model: str = "llama3.1:8b", n_variants: int = 5) -> list:
-    
+def build_variation_chain(model: str = "mistral-nemo"):
+    """
+    Iterative APE Monte Carlo step: takes a previous enriched prompt and produces
+    a SEMANTIC VARIATION of its scaffolding. The original problem text must remain
+    verbatim — only the role, decomposition, and hints vary.
+    """
+    model_target = os.environ.get("MODEL_TARGET", "")
+    target_mention = (
+        f"The target LLM you are optimizing for is `{model_target}`.\n"
+        "Tailor your scaffolding to the strengths and weaknesses of this model.\n\n"
+    ) if model_target else ""
+
+    system_msg = (
+        "You are an expert prompt engineer specializing in code generation.\n\n"
+        f"{target_mention}"
+        "You will receive a coding problem AND a previous enriched prompt that wraps\n"
+        "the problem with a role and a '## Solution guidance' section. Your task is\n"
+        "to produce a SEMANTIC VARIATION of that enriched prompt: same goal, different\n"
+        "framing.\n\n"
+        "The variation MUST:\n\n"
+        "1. Include the ORIGINAL problem text VERBATIM — copy it exactly. Do NOT\n"
+        "   paraphrase, summarize, or omit examples, constraints, or I/O format.\n\n"
+        "2. Use a DIFFERENT expert role from the previous prompt.\n\n"
+        "3. In the '## Solution guidance' section, use a DIFFERENT decomposition\n"
+        "   strategy, DIFFERENT edge cases, and/or a DIFFERENT algorithmic angle\n"
+        "   than the previous prompt.\n\n"
+        "4. Keep the same overall structure: role + verbatim problem + solution\n"
+        "   guidance + step-by-step instruction.\n\n"
+        "Do NOT add execution rules (function name, I/O handling, markdown wrapping).\n"
+        "Return ONLY the new enriched prompt. No preamble, no commentary."
+    )
     template = ChatPromptTemplate([
-        ("system",
-         f"You are a prompt resampler. Given a competitive programming problem, generate EXACTLY {n_variants} "
-         "complete rewordings of the ENTIRE problem. "
-         "Each rewriting must:\n"
-         "- Contain ALL the original information (constraints, input format, output format, examples)\n"
-         "- Be a COMPLETE standalone problem description\n"
-         "- Use different wording and sentence structure\n\n"
-         "FORMAT (mandatory):\n"
-         "|complete reworded problem 1|\n"
-         "|complete reworded problem 2|\n"
-         "...\n"
-         "Output NOTHING outside the | | delimiters."),
-        ("human", "{user_prompt}"),
+        ("system", system_msg),
+        ("human", "Problem:\n{problem}\n\nPrevious enriched prompt:\n{previous}"),
     ])
-    llm = ChatOllama(model=model, num_ctx=4096, num_keep=0)
-    chain = template | llm | StrOutputParser()
-    response = chain.invoke({"user_prompt": question})
-    resampled = [item.strip() for item in response.split("|") if item.strip() and item.strip() != "\n\n"]
-
-    if len(resampled) < 2:
-        resampled = re.split(r'\n\s*\d+\.\s+', response)
-        resampled = [item.strip() for item in resampled if len(item.strip()) > 50]
-
-    resampled = resampled[:n_variants]
-    return [
-        {"prompt": prompt, "code": extract_code(solver_chain.invoke({"user_prompt": prompt}))}
-        for prompt in resampled
-    ]
+    llm = ChatOllama(model=model, num_ctx=NUM_CTX, num_keep=0)
+    return template | llm | StrOutputParser()
 
 
-def _run_script(file_path: str, test_input: str) -> dict:
+def population_size(io_data: dict) -> int:
+    """Number of test cases / assertions in an io_data dict."""
+    if io_data.get("humaneval"):
+        if io_data.get("assertions") is not None:
+            return len(io_data["assertions"])
+        return len(_extract_assertions(io_data.get("test_code", "")))
+    return len(io_data.get("inputs", []))
+
+
+def split_io_data(io_data: dict, dev_frac: float = 0.3) -> tuple[dict, dict]:
+    """
+    Split a problem's evaluation data into a dev portion (used by APE/APO for
+    candidate scoring) and a held-out test portion (used to report final accuracy).
+
+    Returns (dev_io, test_io). Both retain all metadata (fn_name, humaneval flag,
+    entry_point, ...). Only the test cases / assertions are partitioned.
+
+    Edge cases:
+    - If only 1 test case is available, dev == test (degenerate but non-breaking).
+    - dev always has at least 1 item; test always has at least 1 item if possible.
+    """
+    # ── HumanEval (assertion-based) ──
+    if io_data.get("humaneval"):
+        import random as _r
+        all_assertions = _extract_assertions(io_data["test_code"])
+        _r.Random(42).shuffle(all_assertions)
+        n = len(all_assertions)
+        if n <= 1:
+            dev_io  = {**io_data, "assertions": all_assertions}
+            test_io = {**io_data, "assertions": all_assertions}
+            return dev_io, test_io
+        n_dev = max(1, min(n - 1, int(round(n * dev_frac))))
+        dev_io  = {**io_data, "assertions": all_assertions[:n_dev]}
+        test_io = {**io_data, "assertions": all_assertions[n_dev:]}
+        return dev_io, test_io
+
+    # ── APPS ──
+    inputs  = io_data.get("inputs", [])
+    outputs = io_data.get("outputs", [])
+    n = len(inputs)
+    if n <= 1:
+        return dict(io_data), dict(io_data)
+    n_dev = max(1, min(n - 1, int(round(n * dev_frac))))
+    dev_io  = {**io_data, "inputs": inputs[:n_dev],  "outputs": outputs[:n_dev]}
+    test_io = {**io_data, "inputs": inputs[n_dev:], "outputs": outputs[n_dev:]}
+    return dev_io, test_io
+
+
+def _run_script(file_path: str, test_input: str, timeout: int = EXEC_TIMEOUT) -> dict:
     try:
         proc = subprocess.Popen(
             [sys.executable, file_path],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8",
         )
         try:
-            stdout, stderr = proc.communicate(input=test_input, timeout=5)
+            stdout, stderr = proc.communicate(input=test_input, timeout=timeout)
         except subprocess.TimeoutExpired:
             proc.kill()
             proc.communicate()
@@ -255,13 +317,43 @@ def _run_script(file_path: str, test_input: str) -> dict:
         return {"success": False, "error": str(e)}
 
 
-def _run_call_based(code: str, fn_name: str, args: list) -> dict:
-    import json as _json
+def _normalize_value(x):
+    """
+    Recursively convert tuples → lists and sets → sorted lists. Used to make
+    function return values comparable to JSON-loaded expected outputs (which
+    never contain tuples or sets).
+    """
+    if isinstance(x, tuple):
+        return [_normalize_value(e) for e in x]
+    if isinstance(x, list):
+        return [_normalize_value(e) for e in x]
+    if isinstance(x, dict):
+        return {k: _normalize_value(v) for k, v in x.items()}
+    if isinstance(x, set):
+        return sorted([_normalize_value(e) for e in x], key=repr)
+    return x
+
+
+def _run_call_based(code: str, fn_name: str, args, timeout: int = EXEC_TIMEOUT) -> dict:
+    """
+    Run `fn_name(*args)` against the user's code in a subprocess.
+
+    Uses ast.literal_eval/repr instead of JSON to round-trip values, so tuples,
+    sets, and other Python literals not supported by JSON pass through cleanly.
+    Output is normalized (tuple→list, set→sorted list) so it can be compared
+    against APPS expected values (which always come from json.loads).
+    """
+    # APPS occasionally stores a single arg unwrapped instead of as a list.
+    if not isinstance(args, list):
+        args = [args]
+
     harness = code + "\n\n"
-    harness += f"import json as __json, sys as __sys\n"
-    harness += f"__args = __json.loads(__sys.stdin.read())\n"
+    harness += "import sys as __sys, ast as __ast\n"
+    harness += "__args = __ast.literal_eval(__sys.stdin.read())\n"
     harness += f"__result = {fn_name}(*__args)\n"
-    harness += f"print(__json.dumps(__result))\n"
+    harness += "print(repr(__result))\n"
+
+    args_repr = repr(args)
     fd, path = tempfile.mkstemp(suffix=".py")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
@@ -271,15 +363,20 @@ def _run_call_based(code: str, fn_name: str, args: list) -> dict:
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8",
         )
         try:
-            stdout, stderr = proc.communicate(input=_json.dumps(args), timeout=5)
+            stdout, stderr = proc.communicate(input=args_repr, timeout=timeout)
         except subprocess.TimeoutExpired:
             proc.kill(); proc.communicate()
             return {"success": False, "error": "Timeout"}
         if proc.returncode == 0:
+            raw = stdout.strip()
+            # The harness's repr(__result) is the LAST line; the user's code may
+            # have printed debug output before it. Only parse the last line.
+            last_line = raw.splitlines()[-1] if raw else ""
             try:
-                return {"success": True, "output": _json.loads(stdout.strip())}
-            except _json.JSONDecodeError:
-                return {"success": True, "output": stdout.strip()}
+                value = ast.literal_eval(last_line)
+                return {"success": True, "output": _normalize_value(value)}
+            except (ValueError, SyntaxError):
+                return {"success": True, "output": last_line}
         return {"success": False, "error": stderr}
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -310,7 +407,7 @@ def _extract_assertions(test_code: str) -> list[str]:
     return assertions
 
 
-def _run_single_assertion(code: str, assertion: str, entry_point: str) -> dict:
+def _run_single_assertion(code: str, assertion: str, entry_point: str, timeout: int = EXEC_TIMEOUT) -> dict:
     """Run one HumanEval assertion against generated code."""
     assertion_fixed = assertion.replace('candidate', entry_point)
     script = code + "\n\n" + assertion_fixed + "\n"
@@ -323,7 +420,7 @@ def _run_single_assertion(code: str, assertion: str, entry_point: str) -> dict:
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8",
         )
         try:
-            stdout, stderr = proc.communicate(timeout=5)
+            stdout, stderr = proc.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
             proc.kill(); proc.communicate()
             return {"success": False, "error": "Timeout"}
@@ -354,7 +451,9 @@ def evaluate_code(code: str, io_data: dict) -> float:
 
     # ── HumanEval (assertion-based) ──
     if io_data.get("humaneval"):
-        assertions = _extract_assertions(io_data["test_code"])
+        assertions = io_data.get("assertions")
+        if assertions is None:
+            assertions = _extract_assertions(io_data["test_code"])
         if not assertions:
             return 0.0
         passed = sum(
@@ -405,7 +504,9 @@ def get_failing_tests(code: str, io_data: dict, max_failures: int = 3) -> list[d
 
     # ── HumanEval (assertion-based) ──
     if io_data.get("humaneval"):
-        assertions = _extract_assertions(io_data["test_code"])
+        assertions = io_data.get("assertions")
+        if assertions is None:
+            assertions = _extract_assertions(io_data["test_code"])
         failures = []
         for assertion in assertions:
             if len(failures) >= max_failures:
