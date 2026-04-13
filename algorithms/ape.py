@@ -1,58 +1,122 @@
-from utils import resampling, evaluate_code
+from utils import (
+    build_variation_chain,
+    evaluate_code,
+    extract_code,
+    population_size,
+)
 
-MAX_NO_IMPROVE = 2
-MAX_ITERS      = 2
+DEFAULT_N_PROPOSALS = 5
+DEFAULT_N_ITERS     = 2
+DEFAULT_N_KEEP      = 2
 
 
 def run_ape(
     question: str,
-    io_data: dict,
-    solver_chain,
+    dev_io: dict,
+    test_io: dict,
+    target_chain,
+    optimizer_chain,
     model_optimizer: str,
-    n_variants: int = 5,
-    max_iters: int = MAX_ITERS,
-    max_no_improve: int = MAX_NO_IMPROVE,
+    n_proposals: int = DEFAULT_N_PROPOSALS,
+    n_iters: int = DEFAULT_N_ITERS,
+    n_keep: int = DEFAULT_N_KEEP,
 ) -> dict:
-    print(f"\n[APE] Avvio — max_iters={max_iters}")
+    """
+    APE (Zhou et al. 2022), per-problem adaptation.
 
-    best_prompt   = question
-    best_accuracy = 0.0
-    no_improve    = 0
-    iterations    = []
+    1. Proposal: generate `n_proposals` enriched prompts via the optimizer.
+    2. Score each on the DEV split (passed in by the caller).
+    3. Iterative Monte Carlo: keep top-`n_keep`, generate semantic variations
+       of each via the variation chain. Re-score on dev. Repeat for `n_iters`.
+    4. Final eval: every candidate in the final population is also evaluated
+       on the held-out TEST split for downstream pass@k computation.
+    """
+    n_dev  = population_size(dev_io)
+    n_test = population_size(test_io)
+    print(f"\n[APE] Avvio — n_proposals={n_proposals}, n_iters={n_iters}, n_keep={n_keep}, dev={n_dev}, test={n_test}")
 
-    for iter_num in range(1, max_iters + 1):
-        print(f"  [APE] Iter {iter_num}/{max_iters} — generazione varianti …")
+    variation_chain = build_variation_chain(model_optimizer)
 
-        variants   = resampling(best_prompt, solver_chain, model_optimizer, n_variants)
-        accuracies = [evaluate_code(v["code"], io_data) for v in variants]
-        new_best   = max(accuracies) if accuracies else 0.0
+    iterations = []
 
-        print(f"  [APE] Iter {iter_num}: new_best={new_best:.3f}  prev_best={best_accuracy:.3f}")
+    # ── Round 0: initial proposals ──
+    print(f"  [APE] Round 0: {n_proposals} candidati iniziali …")
+    candidates = []
+    for _ in range(n_proposals):
+        enriched = optimizer_chain.invoke({"problem": question})
+        code     = extract_code(target_chain.invoke({"user_prompt": enriched}))
+        dev_acc  = evaluate_code(code, dev_io)
+        candidates.append({"prompt": enriched, "code": code, "dev_score": dev_acc})
 
-        iterations.append({
-            "iter": iter_num,
-            "variants": [
-                {"prompt": v["prompt"], "code": v["code"], "accuracy": a}
-                for v, a in zip(variants, accuracies)
-            ],
-            "best_accuracy": new_best,
-        })
+    iterations.append({
+        "round":      0,
+        "candidates": [
+            {"prompt": c["prompt"], "code": c["code"], "dev_score": c["dev_score"]}
+            for c in candidates
+        ],
+        "best_dev":   max(c["dev_score"] for c in candidates),
+    })
+    print(f"  [APE] Round 0: best_dev={iterations[-1]['best_dev']:.3f}")
 
-        if new_best > best_accuracy:
-            best_prompt   = variants[accuracies.index(new_best)]["prompt"]
-            best_accuracy = new_best
-            no_improve    = 0
-            print(f"  [APE] Miglioramento — reset contatore.")
-        else:
-            no_improve += 1
-            print(f"  [APE] Nessun miglioramento ({no_improve}/{max_no_improve}).")
-            if no_improve >= max_no_improve:
-                print(f"  [APE] Convergenza dopo {iter_num} iterazioni.")
-                break
+    # ── Iterative Monte Carlo refinement ──
+    for it in range(1, n_iters + 1):
+        candidates.sort(key=lambda c: c["dev_score"], reverse=True)
+        top = candidates[:n_keep]
 
-        if best_accuracy >= 1.0:
-            print(f"  [APE] Accuracy 1.0 raggiunta — stop anticipato.")
+        if top[0]["dev_score"] >= 1.0:
+            print(f"  [APE] Dev score 1.0 raggiunto — stop anticipato.")
             break
 
-    print(f"[APE] Convergenza. Best: {best_accuracy:.3f}")
-    return {"best_accuracy": best_accuracy, "iterations": iterations}
+        n_variations_per_kept = max(1, n_proposals // n_keep)
+        print(f"  [APE] Round {it}: variazioni dei top-{n_keep} ({n_variations_per_kept} per kept) …")
+
+        new_candidates = []
+        for parent in top:
+            for _ in range(n_variations_per_kept):
+                variation = variation_chain.invoke({
+                    "problem":  question,
+                    "previous": parent["prompt"],
+                })
+                code    = extract_code(target_chain.invoke({"user_prompt": variation}))
+                dev_acc = evaluate_code(code, dev_io)
+                new_candidates.append({"prompt": variation, "code": code, "dev_score": dev_acc})
+
+        # Elitism: keep top-k from previous round, add new ones.
+        candidates = top + new_candidates
+
+        iterations.append({
+            "round":      it,
+            "candidates": [
+                {"prompt": c["prompt"], "code": c["code"], "dev_score": c["dev_score"]}
+                for c in new_candidates
+            ],
+            "best_dev":   max(c["dev_score"] for c in candidates),
+        })
+        print(f"  [APE] Round {it}: best_dev={iterations[-1]['best_dev']:.3f}")
+
+    # ── Evaluate ALL final-population candidates on held-out TEST split ──
+    print(f"  [APE] Valutazione popolazione finale ({len(candidates)}) sul test split …")
+    for c in candidates:
+        c["test_score"] = evaluate_code(c["code"], test_io)
+
+    best = max(candidates, key=lambda c: c["dev_score"])
+    print(f"[APE] Best: dev={best['dev_score']:.3f}  test={best['test_score']:.3f}")
+
+    return {
+        "best_prompt":      best["prompt"],
+        "best_code":        best["code"],
+        "best_dev":         best["dev_score"],
+        "best_test":        best["test_score"],
+        "n_dev":            n_dev,
+        "n_test":           n_test,
+        "final_population": [
+            {
+                "prompt":     c["prompt"],
+                "code":       c["code"],
+                "dev_score":  c["dev_score"],
+                "test_score": c["test_score"],
+            }
+            for c in candidates
+        ],
+        "iterations":       iterations,
+    }
