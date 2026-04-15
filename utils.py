@@ -47,6 +47,68 @@ def get_humaneval_sample(data, n: int = 20, seed: int = 42, min_assertions: int 
     ]
 
 
+def load_humaneval_plus_dataset():
+    """HumanEval+ (evalplus) — 164 problemi con molti più test per funzione."""
+    ds = load_dataset("evalplus/humanevalplus", split="test")
+    return ds
+
+
+def _extract_plus_tests(test_code: str) -> tuple[list, list]:
+    """
+    Parsa il `test` field di evalplus/humanevalplus e ritorna (inputs, results).
+    Il formato atteso è una funzione `check(candidate)` con assegnazioni
+    letterali `inputs = [...]` e `results = [...]` nel corpo.
+    """
+    import ast as _ast
+    tree = _ast.parse(test_code)
+    check_fn = next((n for n in tree.body
+                     if isinstance(n, _ast.FunctionDef) and n.name == "check"), None)
+    if check_fn is None:
+        raise ValueError("check() function not found")
+    inputs = results = None
+    for stmt in check_fn.body:
+        if isinstance(stmt, _ast.Assign) and len(stmt.targets) == 1:
+            t = stmt.targets[0]
+            if isinstance(t, _ast.Name):
+                if t.id == "inputs":
+                    inputs = _ast.literal_eval(stmt.value)
+                elif t.id == "results":
+                    results = _ast.literal_eval(stmt.value)
+    if inputs is None or results is None:
+        raise ValueError("inputs/results not found in check()")
+    return inputs, results
+
+
+def get_humaneval_plus_sample(data, n: int = 20, seed: int = 42,
+                              min_tests: int = 6) -> list:
+    """
+    Campiona n problemi HumanEval+ con almeno `min_tests` test case ciascuno,
+    ritornando dict pronti per il flow call-based (chiavi: task_id, prompt,
+    entry_point, inputs, results).
+    """
+    import random as _random
+    _random.seed(seed)
+    eligible = []
+    for i in range(len(data)):
+        try:
+            inputs, results = _extract_plus_tests(data[i]["test"])
+        except Exception:
+            continue
+        if len(inputs) >= min_tests and len(inputs) == len(results):
+            eligible.append((i, inputs, results))
+    chosen = _random.sample(eligible, min(n, len(eligible)))
+    return [
+        {
+            "task_id":      data[i]["task_id"],
+            "prompt":       data[i]["prompt"],
+            "entry_point":  data[i]["entry_point"],
+            "inputs":       inputs,
+            "results":      results,
+        }
+        for (i, inputs, results) in chosen
+    ]
+
+
 def get_minibatch(
     data,
     n_per_difficulty: dict | int = 10,
@@ -100,12 +162,86 @@ def get_minibatch(
         #aggiunge ai sample gli scelti randomicamente, dove sample è del tipo:
         #sample = {'question': question, difficulty = 'introductory/...', input_output = 'IO' (test cases)}
         for i in chosen:
-            samples.append({
+            sample = {
                 "question":     data["question"][i],
                 "difficulty":   data["difficulty"][i],
                 "input_output": data["input_output"][i],
-            })
+            }
+            if "solutions" in data.column_names:
+                sample["solutions"] = data["solutions"][i]
+            samples.append(sample)
     return samples
+
+
+def load_augmented_dev(path: str, samples: list | None = None) -> dict:
+    """
+    Carica un file prodotto da augment_apps.py. Ritorna una mappa
+    {int problem_idx: {"inputs": [...], "outputs": [...]}} limitata ai problemi
+    con status == 'ok' e almeno un (input, output). Se il file non esiste o è
+    corrotto ritorna {} (fallback trasparente allo split classico).
+
+    Se `samples` è fornito (il minibatch che il runner sta per usare), controlla
+    che il fingerprint salvato nell'augment corrisponda — altrimenti stampa un
+    warning e ritorna {} (meglio fallback che dev disallineato).
+    """
+    import os as _os, json as _json, sys as _sys
+    if not _os.path.isfile(path):
+        return {}
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = _json.load(f)
+    except (OSError, _json.JSONDecodeError):
+        return {}
+
+    if samples is not None:
+        meta = data.get("_meta", {}) if isinstance(data, dict) else {}
+        saved_fp = meta.get("minibatch_fingerprint")
+        if saved_fp:
+            current_fp = []
+            for i, s in enumerate(samples):
+                try:
+                    io = _json.loads(s["input_output"])
+                    n_tc = len(io.get("inputs", []))
+                except Exception:
+                    n_tc = 0
+                current_fp.append((i, s.get("difficulty"), n_tc,
+                                   (s.get("question", "") or "")[:80]))
+            saved_tuples = [(e.get("idx"), e.get("difficulty"),
+                             e.get("n_test_cases"), e.get("question_head"))
+                            for e in saved_fp]
+            if saved_tuples != current_fp:
+                print(f"[load_augmented_dev] WARNING: fingerprint mismatch su {path}. "
+                      f"Il minibatch attuale differisce da quello usato in augment. "
+                      f"Ignoro l'augmented dev e ricado sullo split classico.",
+                      file=_sys.stderr)
+                return {}
+
+    problems = data.get("problems", {}) if isinstance(data, dict) else {}
+    out: dict = {}
+    for k, v in problems.items():
+        if not isinstance(v, dict):
+            continue
+        if v.get("status") != "ok":
+            continue
+        ins, outs = v.get("inputs"), v.get("outputs")
+        if not ins or not outs or len(ins) != len(outs):
+            continue
+        try:
+            out[int(k)] = {"inputs": list(ins), "outputs": list(outs)}
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
+def inject_augmented(io_data: dict, aug_entry: dict | None) -> dict:
+    """Restituisce una copia di io_data con augmented_inputs/outputs iniettati
+    se aug_entry è valido. Se None, restituisce io_data inalterato."""
+    if not aug_entry:
+        return io_data
+    merged = dict(io_data)
+    merged["augmented_inputs"]  = aug_entry["inputs"]
+    merged["augmented_outputs"] = aug_entry["outputs"]
+    return merged
 
 
 def build_target_chain(model: str = "llama3.1:8b", call_based: bool = False, fn_name: str = ""):
@@ -289,6 +425,21 @@ def split_io_data(io_data: dict, dev_frac: float = 0.3) -> tuple[dict, dict]:
     # ── APPS ──
     inputs  = io_data.get("inputs", [])
     outputs = io_data.get("outputs", [])
+
+    # Augmented dev: if the caller injected augmented_inputs/outputs (produced
+    # offline by augment_apps.py from the reference solution), use them as the
+    # dev pool and keep ALL official inputs/outputs as the held-out test.
+    aug_in  = io_data.get("augmented_inputs")
+    aug_out = io_data.get("augmented_outputs")
+    if aug_in and aug_out and len(aug_in) == len(aug_out) and len(inputs) >= 1:
+        dev_io  = {**io_data, "inputs": list(aug_in),  "outputs": list(aug_out)}
+        test_io = {**io_data, "inputs": list(inputs),  "outputs": list(outputs)}
+        # Strip augmented fields from the inner dicts so evaluate_code sees clean IO.
+        for k in ("augmented_inputs", "augmented_outputs"):
+            dev_io.pop(k, None)
+            test_io.pop(k, None)
+        return dev_io, test_io
+
     n = len(inputs)
     if n <= 1:
         return dict(io_data), dict(io_data)
