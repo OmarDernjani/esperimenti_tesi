@@ -244,11 +244,22 @@ def inject_augmented(io_data: dict, aug_entry: dict | None) -> dict:
     return merged
 
 
+# Fixed human-written prompt template. Used as a "naive prompt engineering" baseline:
+# a reasonable wrapper someone might write without knowing the patterns that emerge
+# from APE/APO. Sent directly to the target LLM, bypassing the optimizer.
+# Changing this string invalidates prior runs (same rule as the chain system prompts).
+HUMAN_PROMPT_TEMPLATE = (
+    "You are an expert programmer.\n\n"
+    "Your task is to solve the following programming problem correctly and efficiently.\n\n"
+    "{problem_description}"
+)
+
+
 def build_target_chain(model: str = "llama3.1:8b", call_based: bool = False, fn_name: str = ""):
 
     if call_based:
         system_msg = (
-            "You are a helpful assistant for coding. "
+            "You are a helpful assistant. "
             "Implement ONLY the Python function described by the user. "
             f"The function MUST be named exactly `{fn_name}`. "
             "Do NOT read from stdin or print anything. "
@@ -257,7 +268,7 @@ def build_target_chain(model: str = "llama3.1:8b", call_based: bool = False, fn_
         )
     else:
         system_msg = (
-            "You are a helpful assistant for coding. "
+            "You are a helpful assistant. "
             "Write a complete, standalone Python script that solves the competitive programming problem described by the user. "
             "Read input with `import sys` and `data = sys.stdin.read()`, then parse it "
             "(e.g. `tokens = data.split()` for numeric problems, or `lines = data.splitlines()` for line-oriented problems). "
@@ -300,13 +311,10 @@ def build_optimizer_chain(model: str = "mistral-nemo"):
         "2. Include the ORIGINAL problem text VERBATIM — copy it exactly as given.\n"
         "   Do NOT paraphrase, summarize, shorten, or omit examples, constraints,\n"
         "   or input/output format.\n\n"
-        "3. After the problem, add a \"## Solution guidance\" section containing:\n"
-        "   - A short decomposition of the problem into 2-4 algorithmic sub-steps\n"
-        "   - 1-2 non-trivial edge cases the model should explicitly handle\n"
-        "   - The expected algorithmic approach and a target time complexity, if inferable\n"
-        "   - Any data-structure hints that would simplify the implementation\n\n"
-        "4. Instruct the target LLM to reason step-by-step BEFORE writing code,\n"
-        "   then produce the final implementation.\n\n"
+        "Beyond these two requirements, you have full freedom over the scaffolding:\n"
+        "any additional guidance, decomposition, hints, reasoning instructions, or\n"
+        "structural choices are up to you. Design whatever you believe will help the\n"
+        "target LLM solve this specific problem correctly.\n\n"
         "Do NOT add execution rules (function name, I/O handling, markdown wrapping).\n"
         "Those are appended automatically downstream.\n\n"
         "Return ONLY the final prompt for the target LLM. No preamble, no commentary."
@@ -351,7 +359,8 @@ def build_variation_chain(model: str = "mistral-nemo"):
     """
     Iterative APE Monte Carlo step: takes a previous enriched prompt and produces
     a SEMANTIC VARIATION of its scaffolding. The original problem text must remain
-    verbatim — only the role, decomposition, and hints vary.
+    verbatim and the expert role must change; all other scaffolding choices are
+    left to the optimizer.
     """
     model_target = os.environ.get("MODEL_TARGET", "")
     target_mention = (
@@ -362,19 +371,17 @@ def build_variation_chain(model: str = "mistral-nemo"):
     system_msg = (
         "You are an expert prompt engineer specializing in code generation.\n\n"
         f"{target_mention}"
-        "You will receive a coding problem AND a previous enriched prompt that wraps\n"
-        "the problem with a role and a '## Solution guidance' section. Your task is\n"
-        "to produce a SEMANTIC VARIATION of that enriched prompt: same goal, different\n"
-        "framing.\n\n"
+        "You will receive a coding problem AND a previous enriched prompt. Your task\n"
+        "is to produce a SEMANTIC VARIATION of that enriched prompt: same goal,\n"
+        "different framing.\n\n"
         "The variation MUST:\n\n"
         "1. Include the ORIGINAL problem text VERBATIM — copy it exactly. Do NOT\n"
         "   paraphrase, summarize, or omit examples, constraints, or I/O format.\n\n"
         "2. Use a DIFFERENT expert role from the previous prompt.\n\n"
-        "3. In the '## Solution guidance' section, use a DIFFERENT decomposition\n"
-        "   strategy, DIFFERENT edge cases, and/or a DIFFERENT algorithmic angle\n"
-        "   than the previous prompt.\n\n"
-        "4. Keep the same overall structure: role + verbatim problem + solution\n"
-        "   guidance + step-by-step instruction.\n\n"
+        "Beyond these two requirements, you have full freedom over the scaffolding:\n"
+        "any decomposition, hints, reasoning instructions, or structural choices are\n"
+        "up to you. Feel free to depart from the previous prompt's structure if you\n"
+        "believe a different approach would help the target LLM more.\n\n"
         "Do NOT add execution rules (function name, I/O handling, markdown wrapping).\n"
         "Return ONLY the new enriched prompt. No preamble, no commentary."
     )

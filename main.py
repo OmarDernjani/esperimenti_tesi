@@ -89,6 +89,11 @@ def main_apps():
         original_code  = utils.extract_code(target_chain.invoke({"user_prompt": problem["question"]}))
         zero_shot_test = utils.evaluate_code(original_code, test_io)
 
+        # Human-prompt: template fisso scritto da un umano, diretto al target (no optimizer)
+        human_prompt      = utils.HUMAN_PROMPT_TEMPLATE.format(problem_description=problem["question"])
+        human_code        = utils.extract_code(target_chain.invoke({"user_prompt": human_prompt}))
+        human_prompt_test = utils.evaluate_code(human_code, test_io)
+
         baseline_result = run_baseline(
             question=problem["question"], test_io=test_io,
             target_chain=target_chain, optimizer_chain=optimizer_chain,
@@ -120,6 +125,7 @@ def main_apps():
             "n_test":       n_test_split,
             "question":     problem["question"],
             "zero_shot":    {"test_score": zero_shot_test, "code": original_code},
+            "human_prompt": {"test_score": human_prompt_test, "code": human_code, "prompt": human_prompt},
             "baseline":     baseline_result,
             "APE":          ape_result,
             "APO":          apo_result,
@@ -169,6 +175,11 @@ def main_humaneval():
         original_code  = utils.extract_code(target_chain.invoke({"user_prompt": problem["prompt"]}))
         zero_shot_test = utils.evaluate_code(original_code, test_io)
 
+        # Human-prompt: template fisso scritto da un umano, diretto al target (no optimizer)
+        human_prompt      = utils.HUMAN_PROMPT_TEMPLATE.format(problem_description=problem["prompt"])
+        human_code        = utils.extract_code(target_chain.invoke({"user_prompt": human_prompt}))
+        human_prompt_test = utils.evaluate_code(human_code, test_io)
+
         baseline_result = run_baseline(
             question=problem["prompt"], test_io=test_io,
             target_chain=target_chain, optimizer_chain=optimizer_chain,
@@ -200,6 +211,7 @@ def main_humaneval():
             "n_test":       n_test_split,
             "question":     problem["prompt"],
             "zero_shot":    {"test_score": zero_shot_test, "code": original_code},
+            "human_prompt": {"test_score": human_prompt_test, "code": human_code, "prompt": human_prompt},
             "baseline":     baseline_result,
             "APE":          ape_result,
             "APO":          apo_result,
