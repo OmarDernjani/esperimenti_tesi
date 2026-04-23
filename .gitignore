@@ -3,6 +3,7 @@
 .__pycache__
 ./__pycache__
 __pycache__
-resume_missing.py
 *.json
 *.txt
+CLAUDE.md
+./cbs/dataset.json
