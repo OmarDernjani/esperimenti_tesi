@@ -293,7 +293,7 @@ def preflight_ollama(model: str) -> None:
     print(f"[preflight] Ollama OK. Modello '{model}' risponde: {content.strip()[:60]!r}")
 
 
-ù
+
 
 def _dedupe_key(cand, call_based: bool) -> str:
     """
