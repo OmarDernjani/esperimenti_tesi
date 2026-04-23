@@ -19,22 +19,17 @@ load_dotenv()
 
 MODEL_AUGMENTER   = os.getenv("MODEL_AUGMENTER", os.getenv("MODEL_OPTIMIZER", "llama3.1:8b"))
 N_PER_DIFFICULTY  = int(os.getenv("N_PER_DIFFICULTY", 5))
-N_CANDIDATES      = int(os.getenv("N_CANDIDATES", 25))   # input grezzi richiesti all'LLM
-N_MIN_KEPT        = int(os.getenv("N_MIN_KEPT",    5))   # soglia minima di valid cases
+N_CANDIDATES      = int(os.getenv("N_CANDIDATES", 200))  
+N_MIN_KEPT        = int(os.getenv("N_MIN_KEPT",    30))  
 MAX_REFS_TO_TRY   = int(os.getenv("MAX_REFS_TO_TRY", 5))
 OUTPUT_FILE       = os.getenv("AUG_OUTPUT", "augmented_dev.json")
 
 
+AUG_TEMPERATURE = float(os.getenv("AUG_TEMPERATURE", 0.9))
+
 
 def find_valid_reference(problem: dict, io_data: dict) -> tuple[int, str] | None:
-    """
-    Itera le solutions del problema e restituisce (index, code) della prima
-    che passa TUTTI i test ufficiali al 100%. None se nessuna è valida.
-
-    Si basa su utils.evaluate_code, che applica le stesse normalizzazioni usate
-    in fase di valutazione — così se una reference passa qui, il suo output è
-    esattamente quello che sarà atteso dai candidati APE/APO.
-    """
+    
     raw_sols = problem.get("solutions")
     if not raw_sols:
         return None
@@ -52,7 +47,7 @@ def find_valid_reference(problem: dict, io_data: dict) -> tuple[int, str] | None
             score = evaluate_code(code, io_data)
         except Exception:
             continue
-        if score >= 0.999:  
+        if score >= 0.999:
             return idx, code
     return None
 
@@ -62,15 +57,48 @@ INPUT_DELIM = "<<<INPUT>>>"
 ARGS_DELIM  = "<<<ARGS>>>"
 END_DELIM   = "<<<END>>>"
 
+
+GENERATION_ANGLES: list[tuple[str, str]] = [
+    ("typical",
+     "Typical, realistic inputs of medium size. Nominal usage — no edge cases, "
+     "no extremes. What a normal user would pass."),
+    ("boundary",
+     "Boundary values: sizes and numeric values at the minimum and maximum allowed "
+     "by the problem constraints, plus values at type edges (0, -1, 1, max int "
+     "within bounds). One test case per distinct boundary when possible."),
+    ("degenerate",
+     "Degenerate cases: empty collections where allowed, single-element inputs, "
+     "inputs where all elements are identical, length-1 containers, trivial cases "
+     "that often break naive implementations."),
+    ("stress",
+     "Stress-size inputs: collections and numeric magnitudes NEAR (but not above) "
+     "the maximum allowed by the constraints. Designed to exercise scalability."),
+    ("ordering",
+     "Ordering variations: inputs that are already sorted ascending, sorted "
+     "descending / reverse, shuffled random, and nearly-sorted with just a few "
+     "out-of-place elements."),
+    ("duplicates",
+     "Heavy duplication: inputs with many repeated values, entire collections of "
+     "the same element, collections where each value appears exactly twice, and "
+     "sparse-vs-dense duplication patterns."),
+    ("adversarial",
+     "Adversarial numerics (where the problem allows): negative values, zero-heavy "
+     "inputs, values chosen to trigger off-by-one, overflow corners, or precision "
+     "issues in naive solutions."),
+    ("diverse_random",
+     "Maximally diverse random inputs: a mix of sizes and value ranges that is NOT "
+     "covered by the previous categories. Aim for variety over any particular "
+     "structural property."),
+]
+
+
 _GENERATOR_SYSTEM_STDIN = (
     "You are a test-case designer for a competitive programming problem that reads from stdin.\n"
-    "Your job is to produce NEW stdin inputs that exercise the problem, including edge cases.\n\n"
+    "Your job is to produce NEW stdin inputs for a SPECIFIC category (the user tells you which).\n\n"
     "Rules:\n"
     "1. Follow the EXACT input format used in the problem statement and examples.\n"
     "2. Respect every constraint on ranges, sizes, types. Do not violate bounds.\n"
-    "3. Produce a diverse mix: typical inputs, minimum-size, maximum-size-but-safe,\n"
-    "   degenerate cases (empty collections where allowed, duplicates, sorted/reverse,\n"
-    "   boundary numeric values).\n"
+    "3. Stay STRICTLY within the category the user specifies. Do not mix categories.\n"
     "4. Output FORMAT — produce each input wrapped between markers exactly like this:\n"
     f"   {INPUT_DELIM}\n"
     "   <raw stdin content, possibly multi-line>\n"
@@ -81,16 +109,14 @@ _GENERATOR_SYSTEM_STDIN = (
 
 _GENERATOR_SYSTEM_CALL = (
     "You are a test-case designer for a Python function-based problem.\n"
-    "Your job is to produce NEW call arguments for the function, including edge cases.\n\n"
+    "Your job is to produce NEW call arguments for a SPECIFIC category (the user tells you which).\n\n"
     "Rules:\n"
     "1. Each test case is a Python LIST of positional arguments to pass to the function,\n"
     "   in the same order and types as the examples. Example: if the function is\n"
     "   `solve(s, n)`, a test case is `[\"abc\", 3]`.\n"
     "2. Respect types and constraints stated in the problem. Do not invent types\n"
     "   not shown in the examples.\n"
-    "3. Produce a diverse mix: typical cases, boundary values (min/max safe), empty\n"
-    "   collections where allowed, duplicates, sorted/reverse-sorted, negatives when\n"
-    "   allowed.\n"
+    "3. Stay STRICTLY within the category the user specifies. Do not mix categories.\n"
     "4. Output FORMAT — each test case wrapped between markers exactly like this:\n"
     f"   {ARGS_DELIM}\n"
     "   [<python arg>, <python arg>, ...]\n"
@@ -102,7 +128,8 @@ _GENERATOR_SYSTEM_CALL = (
 )
 
 
-def build_generator_chain(model: str, call_based: bool = False):
+def build_generator_chain(model: str, call_based: bool = False,
+                          temperature: float = AUG_TEMPERATURE):
     from langchain_community.chat_models import ChatOllama
     from langchain_core.prompts import ChatPromptTemplate
     from langchain_core.output_parsers import StrOutputParser
@@ -112,21 +139,28 @@ def build_generator_chain(model: str, call_based: bool = False):
             "Function name: `{fn_name}`\n\n"
             "Problem statement:\n{problem}\n\n"
             "Examples of valid official argument lists (each between markers):\n{examples}\n\n"
-            "Now produce exactly {n} NEW argument lists in the same format, between "
-            f"{ARGS_DELIM} / {END_DELIM} markers. Include at least "
-            "{n_edge} edge cases among them."
+            "CATEGORY FOR THIS BATCH: **{angle_name}**\n"
+            "{angle_hint}\n\n"
+            "Now produce exactly {n} NEW argument lists in the above category, between "
+            f"{ARGS_DELIM} / {END_DELIM} markers. Stay strictly within this category."
         )
     else:
         system_msg = _GENERATOR_SYSTEM_STDIN
         human_msg = (
             "Problem statement:\n{problem}\n\n"
             "Examples of valid official inputs (each between markers):\n{examples}\n\n"
-            "Now produce exactly {n} NEW inputs in the same format, between "
-            f"{INPUT_DELIM} / {END_DELIM} markers. Include at least "
-            "{n_edge} edge cases among them."
+            "CATEGORY FOR THIS BATCH: **{angle_name}**\n"
+            "{angle_hint}\n\n"
+            "Now produce exactly {n} NEW inputs in the above category, between "
+            f"{INPUT_DELIM} / {END_DELIM} markers. Stay strictly within this category."
         )
     template = ChatPromptTemplate([("system", system_msg), ("human", human_msg)])
-    llm = ChatOllama(model=model, num_ctx=int(os.environ.get("NUM_CTX", "8192")), num_keep=0)
+    llm = ChatOllama(
+        model=model,
+        num_ctx=int(os.environ.get("NUM_CTX", "8192")),
+        num_keep=0,
+        temperature=temperature,
+    )
     return template | llm | StrOutputParser()
 
 
@@ -190,11 +224,7 @@ def parse_generated_args(text: str) -> list[list]:
 
 
 def run_reference_on_input(ref_code: str, stdin_input: str) -> str | None:
-    """
-    Esegue la reference passando stdin_input. Ritorna stdout normalizzato, o None
-    se timeout / crash / stdout vuoto. Usa lo stesso subprocess runner del
-    valutatore principale per avere comportamento coerente.
-    """
+    
     fd, path = tempfile.mkstemp(suffix=".py")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
@@ -217,11 +247,7 @@ def run_reference_on_input(ref_code: str, stdin_input: str) -> str | None:
 
 
 def run_reference_on_args(ref_code: str, fn_name: str, args: list):
-    """
-    Esegue la reference in modalità call-based con `fn_name(*args)`. Ritorna il
-    valore Python normalizzato (tuple→list, set→sorted list) o None se la
-    reference va in timeout / errore / non produce un valore parsabile.
-    """
+    
     result = _run_call_based(ref_code, fn_name, args, timeout=EXEC_TIMEOUT)
     if not result.get("success"):
         return None
@@ -230,11 +256,7 @@ def run_reference_on_args(ref_code: str, fn_name: str, args: list):
 
 def _invoke_with_retry(chain, payload: dict, max_attempts: int = 3,
                        base_delay: float = 2.0) -> str:
-    """
-    Chiama `chain.invoke(payload)` con retry con backoff esponenziale sui
-    ConnectionError e simili errori di rete transitori. Errori non di
-    connessione (es. validation error) vengono rilanciati subito.
-    """
+    
     last_err: Exception | None = None
     for attempt in range(max_attempts):
         try:
@@ -271,13 +293,31 @@ def preflight_ollama(model: str) -> None:
     print(f"[preflight] Ollama OK. Modello '{model}' risponde: {content.strip()[:60]!r}")
 
 
+ù
+
+def _dedupe_key(cand, call_based: bool) -> str:
+    """
+    Chiave di dedupe stabile per input generati.
+    - stdin: la stringa stessa (già normalizzata in parse)
+    - call-based: repr della lista argomenti (ordine e tipi preservati)
+    """
+    if call_based:
+        return repr(cand)
+    ù
+    return "\n".join(l.rstrip() for l in cand.splitlines()).strip()
+
+
 
 def augment_one(problem: dict, stdin_chain, call_chain,
-                n_candidates: int = N_CANDIDATES) -> dict | None:
+                total_target: int = N_CANDIDATES) -> dict | None:
     """
-    Ritorna un dict con status/inputs/outputs/counters. Supporta sia problemi
-    stdin (APPS classici) sia call-based (APPS da Codewars). La scelta della
-    chain avviene in base a `io_data["fn_name"]`.
+    Genera fino a ~total_target test case per il problema, spalmati sui round
+    definiti in GENERATION_ANGLES. Ogni round:
+      1. chiama l'LLM con la categoria specifica
+      2. parsa i blocchi generati
+      3. dedupe progressivo (cross-round)
+      4. valida eseguendo la reference → scarta i candidati invalidi/crash
+    Ritorna dict con status/inputs/outputs/per-round stats.
     """
     try:
         io_data = json.loads(problem["input_output"])
@@ -294,57 +334,99 @@ def augment_one(problem: dict, stdin_chain, call_chain,
 
     fn_name = io_data.get("fn_name") or ""
     call_based = bool(fn_name)
+    chain = call_chain if call_based else stdin_chain
 
+    n_angles = len(GENERATION_ANGLES)
+    per_round = max(10, (total_target + n_angles - 1) // n_angles)  
+
+    
     if call_based:
-        payload = {
+        base_payload = {
             "fn_name":  fn_name,
             "problem":  problem["question"],
             "examples": _format_examples_args(io_data["inputs"], k=3),
-            "n":        n_candidates,
-            "n_edge":   max(3, n_candidates // 5),
         }
-        chain = call_chain
     else:
-        payload = {
+        base_payload = {
             "problem":  problem["question"],
             "examples": _format_examples_stdin(io_data["inputs"], k=3),
-            "n":        n_candidates,
-            "n_edge":   max(3, n_candidates // 5),
         }
-        chain = stdin_chain
-
-    try:
-        raw = _invoke_with_retry(chain, payload)
-    except Exception as e:
-        return {"status": "skipped", "reason": f"generator_error:{type(e).__name__}",
-                "reference_index": ref_idx}
-
-    if call_based:
-        candidates = parse_generated_args(raw)
-    else:
-        candidates = parse_generated(raw)
-    if not candidates:
-        return {"status": "skipped", "reason": "no_candidates_parsed",
-                "reference_index": ref_idx}
 
     aug_inputs:  list = []
     aug_outputs: list = []
-    errors = 0
-    for cand in candidates:
+    seen: set[str] = set()
+    round_stats: list[dict] = []
+    total_raw = 0
+    total_errors = 0
+
+    for angle_name, angle_hint in GENERATION_ANGLES:
+        payload = {
+            **base_payload,
+            "angle_name": angle_name,
+            "angle_hint": angle_hint,
+            "n": per_round,
+        }
+
+        t0_round = time.time()
+        try:
+            raw = _invoke_with_retry(chain, payload)
+        except Exception as e:
+            round_stats.append({
+                "angle": angle_name, "raw": 0, "kept": 0,
+                "dups": 0, "errors": 0,
+                "status": f"generator_error:{type(e).__name__}",
+                "elapsed_sec": round(time.time() - t0_round, 2),
+            })
+            continue
+
         if call_based:
-            out = run_reference_on_args(ref_code, fn_name, cand)
-            if out is None:
-                errors += 1
-                continue
-            aug_inputs.append(cand)
-            aug_outputs.append([out])
+            candidates = parse_generated_args(raw)
         else:
-            out = run_reference_on_input(ref_code, cand)
-            if out is None:
-                errors += 1
+            candidates = parse_generated(raw)
+        total_raw += len(candidates)
+
+        n_kept_round = 0
+        n_dups_round = 0
+        n_err_round  = 0
+        for cand in candidates:
+            key = _dedupe_key(cand, call_based)
+            if key in seen:
+                n_dups_round += 1
                 continue
-            aug_inputs.append(cand)
-            aug_outputs.append(out)
+            seen.add(key)
+
+            if call_based:
+                out = run_reference_on_args(ref_code, fn_name, cand)
+                if out is None:
+                    n_err_round += 1
+                    continue
+                aug_inputs.append(cand)
+                aug_outputs.append([out])
+            else:
+                out = run_reference_on_input(ref_code, cand)
+                if out is None:
+                    n_err_round += 1
+                    continue
+                aug_inputs.append(cand)
+                aug_outputs.append(out)
+            n_kept_round += 1
+
+            
+            if len(aug_inputs) >= total_target:
+                break
+
+        total_errors += n_err_round
+        round_stats.append({
+            "angle":       angle_name,
+            "raw":         len(candidates),
+            "kept":        n_kept_round,
+            "dups":        n_dups_round,
+            "errors":      n_err_round,
+            "elapsed_sec": round(time.time() - t0_round, 2),
+        })
+
+        if len(aug_inputs) >= total_target:
+            break
 
     return {
         "status":           "ok" if len(aug_inputs) >= N_MIN_KEPT else "too_few",
@@ -353,22 +435,24 @@ def augment_one(problem: dict, stdin_chain, call_chain,
         "fn_name":          fn_name,
         "inputs":           aug_inputs,
         "outputs":          aug_outputs,
-        "n_candidates_raw": len(candidates),
+        "n_candidates_raw": total_raw,
         "n_kept":           len(aug_inputs),
-        "n_errors":         errors,
+        "n_errors":         total_errors,
+        "rounds":           round_stats,
     }
 
 
 
 def main():
-    print(f"[augment_apps] MODEL_AUGMENTER={MODEL_AUGMENTER}  N_PER_DIFFICULTY={N_PER_DIFFICULTY}  N_CANDIDATES={N_CANDIDATES}")
+    print(f"[augment_apps] MODEL_AUGMENTER={MODEL_AUGMENTER}  "
+          f"N_PER_DIFFICULTY={N_PER_DIFFICULTY}  N_CANDIDATES(total)={N_CANDIDATES}  "
+          f"rounds={len(GENERATION_ANGLES)}  temp={AUG_TEMPERATURE}")
 
     print("[augment_apps] Loading APPS dataset...")
     train_data, _ = utils.load_apps_dataset()
     samples = utils.get_minibatch(train_data, n_per_difficulty=N_PER_DIFFICULTY)
     print(f"[augment_apps] Minibatch: {len(samples)} problemi")
 
-    
     if not any("solutions" in s for s in samples):
         print("[augment_apps] ERRORE: il minibatch non contiene 'solutions'. "
               "Verifica che utils.get_minibatch sia la versione aggiornata e "
@@ -402,6 +486,8 @@ def main():
             "n_per_difficulty":  N_PER_DIFFICULTY,
             "n_candidates":      N_CANDIDATES,
             "n_min_kept":        N_MIN_KEPT,
+            "temperature":       AUG_TEMPERATURE,
+            "rounds":            [a[0] for a in GENERATION_ANGLES],
             "minibatch_fingerprint": fingerprint,
         },
         "problems": {},
@@ -427,12 +513,12 @@ def main():
             "n_candidates":    res.get("n_candidates_raw", 0),
             "n_kept":          res.get("n_kept", 0),
             "n_errors":        res.get("n_errors", 0),
+            "rounds":          res.get("rounds", []),
             "inputs":          res.get("inputs", []),
             "outputs":         res.get("outputs", []),
             "elapsed_sec":     round(dt, 2),
         }
 
-        
         with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
             json.dump(output, f, ensure_ascii=False, indent=2)
 

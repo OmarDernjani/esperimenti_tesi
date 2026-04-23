@@ -402,7 +402,8 @@ def population_size(io_data: dict) -> int:
     return len(io_data.get("inputs", []))
 
 
-def split_io_data(io_data: dict, dev_frac: float = 0.3) -> tuple[dict, dict]:
+def split_io_data(io_data: dict, dev_frac: float = 0.3,
+                  dev_size: int | None = None) -> tuple[dict, dict]:
     """
     Split a problem's evaluation data into a dev portion (used by APE/APO for
     candidate scoring) and a held-out test portion (used to report final accuracy).
@@ -410,11 +411,32 @@ def split_io_data(io_data: dict, dev_frac: float = 0.3) -> tuple[dict, dict]:
     Returns (dev_io, test_io). Both retain all metadata (fn_name, humaneval flag,
     entry_point, ...). Only the test cases / assertions are partitioned.
 
+    `dev_size` (env: DEV_SIZE, default 50) prende precedenza su `dev_frac`.
+    Usare `dev_size=0` forza il legacy ratio-based split.
+
+    Per il path APPS augmentato:
+      - dev  = primi `dev_size` casi augmented
+      - test = casi ufficiali (≤ MAX_TEST_CASES) + eventuale surplus di augmented
+               (ovvero augmented[dev_size:] concatenati agli ufficiali)
+    Così il test set è più ricco e robusto (HE+-like), mentre il dev resta
+    snello per non far esplodere i tempi di APE/APO.
+
     Edge cases:
     - If only 1 test case is available, dev == test (degenerate but non-breaking).
     - dev always has at least 1 item; test always has at least 1 item if possible.
+    - Se `dev_size >= n`, dev_size viene effettivamente clampato a n-1.
     """
-    # ── HumanEval (assertion-based) ──
+    if dev_size is None:
+        dev_size = int(os.environ.get("DEV_SIZE", "50"))
+
+    def _pick_n_dev(n: int) -> int:
+        if n <= 1:
+            return n
+        if dev_size > 0:
+            return max(1, min(n - 1, dev_size))
+        return max(1, min(n - 1, int(round(n * dev_frac))))
+
+    # ── HumanEval (assertion-based, legacy path) ──
     if io_data.get("humaneval"):
         import random as _r
         all_assertions = _extract_assertions(io_data["test_code"])
@@ -424,23 +446,40 @@ def split_io_data(io_data: dict, dev_frac: float = 0.3) -> tuple[dict, dict]:
             dev_io  = {**io_data, "assertions": all_assertions}
             test_io = {**io_data, "assertions": all_assertions}
             return dev_io, test_io
-        n_dev = max(1, min(n - 1, int(round(n * dev_frac))))
+        n_dev = _pick_n_dev(n)
         dev_io  = {**io_data, "assertions": all_assertions[:n_dev]}
         test_io = {**io_data, "assertions": all_assertions[n_dev:]}
         return dev_io, test_io
 
-    # ── APPS ──
+    # ── APPS / HumanEval+ (inputs/outputs) ──
     inputs  = io_data.get("inputs", [])
     outputs = io_data.get("outputs", [])
 
-    # Augmented dev: if the caller injected augmented_inputs/outputs (produced
-    # offline by augment_apps.py from the reference solution), use them as the
-    # dev pool and keep ALL official inputs/outputs as the held-out test.
+    # Augmented dev: se il caller ha iniettato augmented_inputs/outputs (prodotti
+    # offline da augment_apps.py dalla reference solution), prendi i primi
+    # dev_size come dev e manda gli ufficiali + eventuale surplus augmented al
+    # test split. Questo mantiene l'invariante "dev e test sono disgiunti".
     aug_in  = io_data.get("augmented_inputs")
     aug_out = io_data.get("augmented_outputs")
     if aug_in and aug_out and len(aug_in) == len(aug_out) and len(inputs) >= 1:
-        dev_io  = {**io_data, "inputs": list(aug_in),  "outputs": list(aug_out)}
-        test_io = {**io_data, "inputs": list(inputs),  "outputs": list(outputs)}
+        n_aug   = len(aug_in)
+        n_dev   = _pick_n_dev(n_aug) if n_aug >= 1 else 0
+        # Cap sul surplus augmented che finisce nel test split: test eval è il
+        # collo di bottiglia (tempi scalano con n_final_candidates × n_test_cases).
+        # TEST_AUG_CAP=0 disabilita il cap (tutto il surplus nel test).
+        test_aug_cap = int(os.environ.get("TEST_AUG_CAP", "50"))
+        if test_aug_cap > 0:
+            extra_in  = list(aug_in[n_dev:n_dev + test_aug_cap])
+            extra_out = list(aug_out[n_dev:n_dev + test_aug_cap])
+        else:
+            extra_in  = list(aug_in[n_dev:])
+            extra_out = list(aug_out[n_dev:])
+        dev_io  = {**io_data,
+                   "inputs":  list(aug_in[:n_dev]),
+                   "outputs": list(aug_out[:n_dev])}
+        test_io = {**io_data,
+                   "inputs":  list(inputs)  + extra_in,
+                   "outputs": list(outputs) + extra_out}
         # Strip augmented fields from the inner dicts so evaluate_code sees clean IO.
         for k in ("augmented_inputs", "augmented_outputs"):
             dev_io.pop(k, None)
@@ -450,7 +489,7 @@ def split_io_data(io_data: dict, dev_frac: float = 0.3) -> tuple[dict, dict]:
     n = len(inputs)
     if n <= 1:
         return dict(io_data), dict(io_data)
-    n_dev = max(1, min(n - 1, int(round(n * dev_frac))))
+    n_dev = _pick_n_dev(n)
     dev_io  = {**io_data, "inputs": inputs[:n_dev],  "outputs": outputs[:n_dev]}
     test_io = {**io_data, "inputs": inputs[n_dev:], "outputs": outputs[n_dev:]}
     return dev_io, test_io

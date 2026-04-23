@@ -1,18 +1,18 @@
 # env
-python-dotenv
+python-dotenv==1.2.2
 
 # dataset
-datasets
+datasets==2.19.0
 
-# database and validation
-sqlalchemy
-pydantic
-psycopg2-binary
+# llm (ChatOllama via langchain_community; richiede Ollama in esecuzione)
+langchain-community==0.4.1
+langchain-core==1.2.17
 
-# llm
-langchain
-langchain-ollama
-langchain-community
+# progress bar
+tqdm==4.67.3
 
-# others
-jupyter
+# analisi (notebooks/analisi_esp.ipynb)
+jupyter==1.1.1
+matplotlib==3.10.8
+numpy==2.4.2
+pandas==3.0.1

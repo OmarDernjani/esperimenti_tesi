@@ -11,10 +11,12 @@ load_dotenv()
 MODEL_TARGET      = os.getenv("MODEL_TARGET")
 MODEL_OPTIMIZER   = os.getenv("MODEL_OPTIMIZER")
 DATASET           = os.getenv("DATASET", "apps")          # "apps" o "humaneval"
-N_VARIANTS        = int(os.getenv("N_VARIANTS", 5))
+N_VARIANTS        = int(os.getenv("N_VARIANTS", 10))
 N_PER_DIFFICULTY  = int(os.getenv("N_PER_DIFFICULTY", 5))
 N_HUMANEVAL       = int(os.getenv("N_HUMANEVAL", 15))
 MAX_TEST_CASES    = int(os.getenv("MAX_TEST_CASES", 10))
+APE_N_ITERS         = int(os.getenv("APE_N_ITERS",         2))
+APE_N_KEEP          = int(os.getenv("APE_N_KEEP",          2))
 APO_NUM_GRADIENTS   = int(os.getenv("APO_NUM_GRADIENTS",   2))
 APO_NUM_EDITS       = int(os.getenv("APO_NUM_EDITS",       1))
 APO_NUM_PARAPHRASES = int(os.getenv("APO_NUM_PARAPHRASES", 1))
@@ -103,6 +105,7 @@ def main_apps():
             question=problem["question"], dev_io=dev_io, test_io=test_io,
             target_chain=target_chain, optimizer_chain=optimizer_chain,
             model_optimizer=MODEL_OPTIMIZER, n_proposals=N_VARIANTS,
+            n_iters=APE_N_ITERS, n_keep=APE_N_KEEP,
         )
         ape_result["pass_at_k"] = _pass_at_k([c["test_score"] for c in ape_result["final_population"]])
 
@@ -189,6 +192,7 @@ def main_humaneval():
             question=problem["prompt"], dev_io=dev_io, test_io=test_io,
             target_chain=target_chain, optimizer_chain=optimizer_chain,
             model_optimizer=MODEL_OPTIMIZER, n_proposals=N_VARIANTS,
+            n_iters=APE_N_ITERS, n_keep=APE_N_KEEP,
         )
         ape_result["pass_at_k"] = _pass_at_k([c["test_score"] for c in ape_result["final_population"]])
 
