@@ -13,6 +13,8 @@ from langchain_core.output_parsers import StrOutputParser
 # ── Global execution / model knobs (env-tunable) ────────────────────────────
 NUM_CTX        = int(os.environ.get("NUM_CTX", "8192"))
 EXEC_TIMEOUT   = int(os.environ.get("EXEC_TIMEOUT", "10"))
+base_url       = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+
 
 
 def load_apps_dataset():
@@ -282,7 +284,7 @@ def build_target_chain(model: str = "llama3.1:8b", call_based: bool = False, fn_
         ("system", system_msg),
         ("human", "{user_prompt}"),
     ])
-    llm = ChatOllama(model=model, num_ctx=NUM_CTX, num_keep=0)
+    llm = ChatOllama(model=model, num_ctx=NUM_CTX, num_keep=0, base_url=base_url)
     return template | llm | StrOutputParser()
 
 
@@ -324,7 +326,7 @@ def build_optimizer_chain(model: str = "mistral-nemo"):
         ("system", system_msg),
         ("human", "Problem:\n{problem}"),
     ])
-    llm = ChatOllama(model=model, num_ctx=NUM_CTX, num_keep=0)
+    llm = ChatOllama(model=model, num_ctx=NUM_CTX, num_keep=0, base_url=base_url)
     return template | llm | StrOutputParser()
 
 
@@ -389,7 +391,7 @@ def build_variation_chain(model: str = "mistral-nemo"):
         ("system", system_msg),
         ("human", "Problem:\n{problem}\n\nPrevious enriched prompt:\n{previous}"),
     ])
-    llm = ChatOllama(model=model, num_ctx=NUM_CTX, num_keep=0)
+    llm = ChatOllama(model=model, num_ctx=NUM_CTX, num_keep=0, base_url=base_url)
     return template | llm | StrOutputParser()
 
 

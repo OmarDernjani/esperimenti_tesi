@@ -23,6 +23,7 @@ N_CANDIDATES      = int(os.getenv("N_CANDIDATES", 200))
 N_MIN_KEPT        = int(os.getenv("N_MIN_KEPT",    30))  
 MAX_REFS_TO_TRY   = int(os.getenv("MAX_REFS_TO_TRY", 5))
 OUTPUT_FILE       = os.getenv("AUG_OUTPUT", "augmented_dev.json")
+base_url          = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 
 
 AUG_TEMPERATURE = float(os.getenv("AUG_TEMPERATURE", 0.9))
@@ -160,6 +161,7 @@ def build_generator_chain(model: str, call_based: bool = False,
         num_ctx=int(os.environ.get("NUM_CTX", "8192")),
         num_keep=0,
         temperature=temperature,
+        base_url=base_url,
     )
     return template | llm | StrOutputParser()
 
@@ -280,7 +282,7 @@ def preflight_ollama(model: str) -> None:
     30 problemi tutti in errore di connessione.
     """
     from langchain_community.chat_models import ChatOllama
-    llm = ChatOllama(model=model, num_ctx=1024, num_keep=0)
+    llm = ChatOllama(model=model, num_ctx=1024, num_keep=0, base_url=base_url)
     try:
         out = llm.invoke("Say 'ok'.")
     except Exception as e:
