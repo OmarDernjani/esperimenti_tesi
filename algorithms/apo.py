@@ -66,7 +66,12 @@ def _gradient_chain(model: str):
          "Failing test cases:\n{failures}\n\n"
          "Generate {m} distinct critiques."),
     ])
-    llm = ChatOllama(model=model, num_ctx=NUM_CTX, num_keep=0, base_url=base_url)
+    llm = ChatOllama(model=model, 
+                     num_ctx=NUM_CTX, 
+                     num_keep=0, 
+                     base_url=base_url,
+                     streaming=False,
+                     timeout=300,)
     return template | llm | StrOutputParser()
 
 
@@ -103,7 +108,12 @@ def _edit_chain(model: str):
          "Critique:\n{critique}\n\n"
          "Write {q} improved prompts that address this critique."),
     ])
-    llm = ChatOllama(model=model, num_ctx=NUM_CTX, num_keep=0, base_url=base_url)
+    llm = ChatOllama(model=model, 
+                     num_ctx=NUM_CTX, 
+                     num_keep=0, 
+                     base_url=base_url,
+                     streaming=False,
+                     timeout=300,)
     return template | llm | StrOutputParser()
 
 
@@ -126,7 +136,12 @@ def _paraphrase_chain(model: str):
          "Do NOT add execution rules. Return ONLY the paraphrased prompt, no preamble."),
         ("human", "Original prompt:\n{prompt}\n\nGenerate a paraphrase."),
     ])
-    llm = ChatOllama(model=model, num_ctx=NUM_CTX, num_keep=0, base_url=base_url)
+    llm = ChatOllama(model=model, 
+                     num_ctx=NUM_CTX, 
+                     num_keep=0, 
+                     base_url=base_url,
+                     streaming=False,
+                     timeout=300,)
     return template | llm | StrOutputParser()
 
 

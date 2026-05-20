@@ -162,6 +162,8 @@ def build_generator_chain(model: str, call_based: bool = False,
         num_keep=0,
         temperature=temperature,
         base_url=base_url,
+        streaming=False,
+        timeout=300,
     )
     return template | llm | StrOutputParser()
 
@@ -282,7 +284,12 @@ def preflight_ollama(model: str) -> None:
     30 problemi tutti in errore di connessione.
     """
     from langchain_community.chat_models import ChatOllama
-    llm = ChatOllama(model=model, num_ctx=1024, num_keep=0, base_url=base_url)
+    llm = ChatOllama(model=model, 
+                     num_ctx=1024, 
+                     num_keep=0, 
+                     base_url=base_url,
+                     streaming=False,
+                     timeout=300,)
     try:
         out = llm.invoke("Say 'ok'.")
     except Exception as e:

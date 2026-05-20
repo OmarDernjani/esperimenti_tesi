@@ -284,7 +284,12 @@ def build_target_chain(model: str = "llama3.1:8b", call_based: bool = False, fn_
         ("system", system_msg),
         ("human", "{user_prompt}"),
     ])
-    llm = ChatOllama(model=model, num_ctx=NUM_CTX, num_keep=0, base_url=base_url)
+    llm = ChatOllama(model=model, 
+                     num_ctx=NUM_CTX, 
+                     num_keep=0, 
+                     base_url=base_url, 
+                     streaming=False,
+                     timeout=300,)
     return template | llm | StrOutputParser()
 
 
@@ -326,7 +331,12 @@ def build_optimizer_chain(model: str = "mistral-nemo"):
         ("system", system_msg),
         ("human", "Problem:\n{problem}"),
     ])
-    llm = ChatOllama(model=model, num_ctx=NUM_CTX, num_keep=0, base_url=base_url)
+    llm = ChatOllama(model=model, 
+                     num_ctx=NUM_CTX, 
+                     num_keep=0, 
+                     base_url=base_url,
+                    streaming=False,
+                    timeout=300,)
     return template | llm | StrOutputParser()
 
 
@@ -391,7 +401,12 @@ def build_variation_chain(model: str = "mistral-nemo"):
         ("system", system_msg),
         ("human", "Problem:\n{problem}\n\nPrevious enriched prompt:\n{previous}"),
     ])
-    llm = ChatOllama(model=model, num_ctx=NUM_CTX, num_keep=0, base_url=base_url)
+    llm = ChatOllama(model=model, 
+                     num_ctx=NUM_CTX, 
+                     num_keep=0, 
+                     base_url=base_url,
+                     streaming=False,
+                     timeout=300,)
     return template | llm | StrOutputParser()
 
 
