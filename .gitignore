@@ -5,6 +5,7 @@
 __pycache__
 *.json
 *.txt
+!CodePromptOpt/requirements.txt
 CLAUDE.md
 ./cbs/dataset.json
 Microsoft
