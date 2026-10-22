@@ -200,6 +200,12 @@ Riferimenti: [Qwen3-14B](https://huggingface.co/Qwen/Qwen3-14B), [Phi-4-mini](ht
 
 
 # ELENCO COMANDI
+```bash
+bash CodePromptOpt/finetuning/podman.sh logs
+bash CodePromptOpt/finetuning/podman.sh status
+bash CodePromptOpt/finetuning/podman.sh wait
+```
+
 Esegui i comandi dalla radice del repository sul server. Lo script seleziona già la GPU 3 e avvia tutto tramite Podman.
 1. Setup iniziale, una sola volta
 ```
