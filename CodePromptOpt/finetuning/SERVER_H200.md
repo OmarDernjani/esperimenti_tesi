@@ -57,6 +57,29 @@ Per controllare il maggior numero di esempi Top-k si usa un sampler con probabil
 
 ## 3. Pilot: tokenizzazione e prova di due step
 
+### Modalità detached e monitoraggio
+
+`smoke`, `train`, `generate` e `gpu` avviano ora un container in **detached mode** (`podman run -d`), chiamato di default `cpo-gpu-3`. Il comando ritorna subito e il lavoro continua dopo la chiusura di SSH. Il container viene conservato dopo la fine, insieme ai log. `build`, `doctor`, `plan`, `prepare`, `cpu` ed `evaluate` restano in foreground.
+
+Prima di avviare la fase successiva, attendere il completamento e controllare l'exit code:
+
+```bash
+bash CodePromptOpt/finetuning/podman.sh logs
+bash CodePromptOpt/finetuning/podman.sh status
+bash CodePromptOpt/finetuning/podman.sh wait
+```
+
+`logs` segue l'output: Ctrl+C interrompe soltanto la visualizzazione. `wait` restituisce l'exit code del lavoro (0 indica successo). Per concatenare fasi usare `&&` dopo `wait`; i comandi smoke/train/generate elencati sotto non attendono automaticamente. Non lanciare `prepare` o altri processi GPU mentre un lavoro è attivo.
+
+```bash
+bash CodePromptOpt/finetuning/podman.sh smoke --models qwen3_8b --seeds 42 --strategies best
+bash CodePromptOpt/finetuning/podman.sh wait && bash CodePromptOpt/finetuning/podman.sh train --models qwen3_8b --seeds 42
+```
+
+Un secondo lavoro detached viene rifiutato mentre il container è attivo. Al lancio successivo, un container terminato viene rinominato con timestamp e conservato: il nome archiviato viene stampato e i log rimangono leggibili con `podman logs NOME_ARCHIVIATO`. `CPO_CONTAINER_NAME` consente un nome personalizzato, da usare anche nei comandi di monitoraggio. Mantenere lo stesso nome per evitare training concorrenti sulla stessa GPU.
+
+Per fermare esplicitamente il lavoro usare `bash CodePromptOpt/finetuning/podman.sh stop`; la ripresa avviene dal checkpoint tramite il comando documentato sotto, non con `podman start`. Gli output sul repository e la cache restano persistenti. Detached mode non implica ripresa automatica dopo reboot o crash del server. I container archiviati si possono rimuovere manualmente con `podman rm NOME_ARCHIVIATO` dopo aver conservato i log necessari.
+
 Iniziare da Qwen3-8B con seed 42. `prepare` scarica il tokenizer, esclude senza troncamento le sequenze oltre 4096 e scrive il report; non carica i pesi.
 
 ```bash
@@ -87,11 +110,12 @@ bash CodePromptOpt/finetuning/podman.sh prepare --models qwen3_4b qwen3_14b phi4
 bash CodePromptOpt/finetuning/podman.sh train --models qwen3_4b qwen3_14b phi4_mini
 ```
 
-Oppure, dopo il pilot, `bash CodePromptOpt/finetuning/podman.sh train` completa tutta la matrice sequenzialmente. Per esecuzioni lunghe usare una sessione persistente del server (per esempio `tmux`) e conservare il log:
+Oppure, dopo il pilot, `bash CodePromptOpt/finetuning/podman.sh train` completa tutta la matrice sequenzialmente in detached mode. Non serve `tmux`. Per seguire e conservare il log:
 
 ```bash
-set -o pipefail
-bash CodePromptOpt/finetuning/podman.sh train --models qwen3_8b 2>&1 | tee h200-8b-training.log
+bash CodePromptOpt/finetuning/podman.sh train --models qwen3_8b
+podman logs -f cpo-gpu-3
+podman logs cpo-gpu-3 > h200-8b-training.log 2>&1
 ```
 
 Ogni cartella `runs/MODELLO-STRATEGIA-sSEED/` contiene `adapter/`, `checkpoints/`, `history.json`, `audit.json`, `excluded.jsonl`, `environment.txt` ed `experiment.json`. L'adapter è il migliore per validation loss. I checkpoint contengono anche gli stati necessari alla ripresa; non sono modelli base completi. Conservare anche l'immagine (`podman image inspect localhost/codepromptopt-ft:h200`) e la matrice utilizzata. La risoluzione del commit è comune alle repliche, e base/SFT usano la stessa precisione.

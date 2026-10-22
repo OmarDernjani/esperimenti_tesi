@@ -6,6 +6,7 @@ IMAGE="${CPO_IMAGE:-localhost/codepromptopt-ft:h200}"
 # Host GPU: defaults to 3, so no external export is needed.
 export CPO_GPU="${CPO_GPU:-3}"
 GPU="$CPO_GPU"
+CONTAINER="${CPO_CONTAINER_NAME:-cpo-gpu-${GPU//[^a-zA-Z0-9_.-]/-}}"
 CACHE="${CPO_CACHE:-cpo-hf-cache}"
 network_args=()
 if [[ -n "${CPO_NETWORK:-}" ]]; then network_args=(--network "$CPO_NETWORK"); fi
@@ -22,6 +23,26 @@ run_gpu() {
     -e HF_TOKEN -e CODEGEN_API_KEY \
     -v "$PWD:/workspace:z" -v "$CACHE:/cache" "$IMAGE" "$@"
 }
+run_gpu_detached() {
+  if podman container exists "$CONTAINER"; then
+    if [[ "$(podman inspect --format '{{.State.Running}}' "$CONTAINER")" == true ]]; then
+      echo "Container $CONTAINER is already running. Wait for it before launching another GPU stage." >&2
+      exit 1
+    fi
+    # Keep completed containers and their logs rather than removing them with --rm.
+    archived="${CONTAINER}-$(date -u +%Y%m%dT%H%M%SZ)-$$"
+    podman rename "$CONTAINER" "$archived"
+    echo "Previous container retained as $archived"
+  fi
+  podman run -d --name "$CONTAINER" "${network_args[@]}" \
+    --device "nvidia.com/gpu=$GPU" -e CUDA_VISIBLE_DEVICES=0 \
+    -e CUDA_DEVICE_ORDER=PCI_BUS_ID -e PYTHONUNBUFFERED=1 --shm-size=8g \
+    -e HF_TOKEN -e CODEGEN_API_KEY \
+    -v "$PWD:/workspace:z" -v "$CACHE:/cache" "$IMAGE" "$@"
+  echo "Container: $CONTAINER (detached; retained after exit)"
+  echo "Logs: podman logs -f $CONTAINER"
+  echo "Wait and check exit code: bash CodePromptOpt/finetuning/podman.sh wait"
+}
 case "$action" in
   build)
     podman build -t "$IMAGE" -f CodePromptOpt/finetuning/Containerfile .
@@ -31,11 +52,23 @@ case "$action" in
     run_gpu python -c 'import torch; assert torch.cuda.is_available(); assert torch.cuda.device_count()==1; assert torch.cuda.is_bf16_supported(); print(torch.cuda.get_device_name(0)); print("GiB:", torch.cuda.get_device_properties(0).total_memory/2**30)'
     ;;
   plan) run_cpu python -m CodePromptOpt.finetuning.suite --stage plan "$@" ;;
-  prepare|smoke|train|generate)
+  prepare)
     run_gpu python -m CodePromptOpt.finetuning.suite --stage "$action" "$@"
     ;;
+  smoke|train|generate)
+    run_gpu_detached python -m CodePromptOpt.finetuning.suite --stage "$action" "$@"
+    ;;
   cpu) run_cpu "$@" ;;
-  gpu) run_gpu "$@" ;;
+  gpu) run_gpu_detached "$@" ;;
+  logs) podman logs -f "$CONTAINER" "$@" ;;
+  status) podman inspect --format '{{.Name}}: {{.State.Status}} (exit={{.State.ExitCode}})' "$CONTAINER" ;;
+  wait)
+    code="$(podman wait "$CONTAINER")"
+    echo "$CONTAINER exited with code $code"
+    [[ "$code" =~ ^[0-9]+$ ]] || exit 1
+    exit "$code"
+    ;;
+  stop) podman stop "$CONTAINER" "$@" ;;
   evaluate)
     # Each test gets its own container; never expose the Podman socket to a workload.
     # Arguments: samples.jsonl tests.jsonl output.jsonl jobs-directory
@@ -68,6 +101,6 @@ case "$action" in
     run_cpu python -m CodePromptOpt.finetuning.container_evaluate collect --jobs "$jobs" --output "$output"
     ;;
   *)
-    echo 'Usage: bash CodePromptOpt/finetuning/podman.sh {build|doctor|plan|prepare|smoke|train|generate|cpu|gpu|evaluate} [arguments]'
+    echo 'Usage: bash CodePromptOpt/finetuning/podman.sh {build|doctor|plan|prepare|smoke|train|generate|cpu|gpu|evaluate|logs|status|wait|stop} [arguments]'
     ;;
 esac
