@@ -1,5 +1,11 @@
 FROM docker.io/pytorch/pytorch:2.7.1-cuda12.6-cudnn9-runtime
 WORKDIR /workspace
+# Triton builds its CUDA driver helper at runtime, including when PEFT imports
+# bitsandbytes for BF16 LoRA. Keep the C compiler inside the image.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential \
+    && rm -rf /var/lib/apt/lists/*
+ENV CC=/usr/bin/gcc CXX=/usr/bin/g++
 COPY CodePromptOpt/finetuning/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 COPY CodePromptOpt /workspace/CodePromptOpt

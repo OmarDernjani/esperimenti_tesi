@@ -49,7 +49,7 @@ case "$action" in
     podman volume create "$CACHE" >/dev/null
     ;;
   doctor)
-    run_gpu python -c 'import torch; assert torch.cuda.is_available(); assert torch.cuda.device_count()==1; assert torch.cuda.is_bf16_supported(); print(torch.cuda.get_device_name(0)); print("GiB:", torch.cuda.get_device_properties(0).total_memory/2**30)'
+    run_gpu python -m CodePromptOpt.finetuning.doctor
     ;;
   plan) run_cpu python -m CodePromptOpt.finetuning.suite --stage plan "$@" ;;
   prepare)

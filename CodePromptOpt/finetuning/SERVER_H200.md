@@ -37,6 +37,18 @@ Il wrapper usa mount condivisi con label `:z` e un volume `cpo-hf-cache`. `CPO_I
 
 ## 2. Pianificare il dataset e fissare i modelli
 
+Se lo smoke fallisce con `Failed to find C compiler`, aggiornare i file sul server e ricostruire l'immagine: il Containerfile installa `build-essential` e imposta `CC`/`CXX` dentro il container. `doctor` verifica anche il compilatore e l'import PEFT/bitsandbytes che inizializza Triton. Non serve installare GCC sull'host.
+
+```bash
+bash CodePromptOpt/finetuning/podman.sh build
+bash CodePromptOpt/finetuning/podman.sh doctor
+bash CodePromptOpt/finetuning/podman.sh smoke --models qwen3_8b --seeds 42 --strategies best
+bash CodePromptOpt/finetuning/podman.sh logs
+bash CodePromptOpt/finetuning/podman.sh wait
+```
+
+Lo smoke fallito prima del training non ha salvato adapter: si può rilanciare sulla stessa directory. Il wrapper conserva il vecchio container rinominandolo e usa la nuova immagine per il nuovo lancio; non usare `podman start` sul container fallito. Dataset preparati e cache dei pesi vengono riutilizzati.
+
 Il comando seguente prepara tutti i dataset e i 36 file config, senza scaricare i pesi. Le revisioni Hugging Face sono risolte a commit e conservate in `revisions.json`.
 
 ```bash
@@ -204,6 +216,7 @@ Riferimenti: [Qwen3-14B](https://huggingface.co/Qwen/Qwen3-14B), [Phi-4-mini](ht
 bash CodePromptOpt/finetuning/podman.sh logs
 bash CodePromptOpt/finetuning/podman.sh status
 bash CodePromptOpt/finetuning/podman.sh wait
+bash CodePromptOpt/finetuning/podman.sh stop
 ```
 
 Esegui i comandi dalla radice del repository sul server. Lo script seleziona già la GPU 3 e avvia tutto tramite Podman.
