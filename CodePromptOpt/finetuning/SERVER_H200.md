@@ -152,6 +152,24 @@ bash CodePromptOpt/finetuning/podman.sh plan --pin-revisions --models qwen3_32b 
 
 ## 5. Generare i prompt e misurare il beneficio
 
+### Liberare la cache fra modelli
+
+Lo script `clear_cache.sh` elimina soltanto le directory dei modelli base nel volume Podman `cpo-hf-cache` (o `CPO_CACHE`). Non modifica adapter, checkpoint, report o modelli Ollama. Viene eseguito sull'host senza avviare container, anche quando il disco è pieno. Non eseguirlo contemporaneamente al lancio di nuovi job: rifiuta la cancellazione se un container attivo usa il volume.
+
+```bash
+# Anteprima della cache di un modello
+bash CodePromptOpt/finetuning/clear_cache.sh --model qwen3_4b
+
+# Eliminazione effettiva dopo aver completato training/generazione
+bash CodePromptOpt/finetuning/clear_cache.sh --model qwen3_4b --delete
+
+# Anteprima di tutti i modelli, poi eliminazione
+bash CodePromptOpt/finetuning/clear_cache.sh --all
+bash CodePromptOpt/finetuning/clear_cache.sh --all --delete
+```
+
+Alias supportati: `qwen3_4b`, `qwen3_8b`, `qwen3_14b`, `qwen3_32b`, `phi4_mini`; si può anche passare `--model Qwen/Qwen3-8B`. Per usare di nuovo un adapter servirà riscaricare il modello base. I container terminati e le immagini Podman non vengono rimossi.
+
 La validation serve alle scelte sperimentali; usare il test finale soltanto quando il protocollo è fissato. Esempio sul pilot completo:
 
 ```bash
