@@ -1,0 +1,7 @@
+FROM docker.io/pytorch/pytorch:2.7.1-cuda12.6-cudnn9-runtime
+WORKDIR /workspace
+COPY CodePromptOpt/finetuning/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+COPY CodePromptOpt /workspace/CodePromptOpt
+ENV HF_HOME=/cache/huggingface TOKENIZERS_PARALLELISM=false
+CMD ["python", "-m", "CodePromptOpt.finetuning.train", "--help"]

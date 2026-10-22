@@ -1,0 +1,20 @@
+{
+  "paradigm": "DPO",
+  "configuration_kind": "trainer-neutral example; adapt field mappings to your training framework",
+  "policy_model": "REPLACE_WITH_YOUR_SFT_CHECKPOINT",
+  "reference_model": "SAME_INITIAL_SFT_CHECKPOINT_FROZEN",
+  "train_file": "CodePromptOpt/data/dpo/train.jsonl",
+  "validation_file": "CodePromptOpt/data/dpo/validation.jsonl",
+  "input_template": "{instruction}\n\nTarget code generation model: {target_model}\n\nProgramming problem:\n{input}",
+  "chosen_field": "chosen",
+  "rejected_field": "rejected",
+  "beta": 0.1,
+  "truncate_original_problem_or_prompt": false,
+  "seed": 42,
+  "learning_rate": 0.000005,
+  "epochs": 1,
+  "per_device_batch_size": 1,
+  "gradient_accumulation_steps": 8,
+  "checkpoint_selection": "validation tasks only",
+  "do_not_load": ["canonical test-task scores", "test-task optimized prompts", "generated_code"]
+}

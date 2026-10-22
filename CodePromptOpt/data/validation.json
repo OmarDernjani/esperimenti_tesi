@@ -1,0 +1,30 @@
+{
+  "assertions": 85347,
+  "errors": [],
+  "passed": true,
+  "raw_invalid_prompt_candidate_ids": [
+    "candidate_04b1e18b357ae1fa926652ef",
+    "candidate_0774d8bc0bcbfeb36ea18706",
+    "candidate_13e2ba0d143319c89dc6e325",
+    "candidate_2288287d79616cf8d11a94c2",
+    "candidate_388dd1b2da33b3b0b06657e2",
+    "candidate_40e13db7743cacdec16308fa",
+    "candidate_5be7ac0efb5c1db259467822",
+    "candidate_638a16bf79f9268c638d736d",
+    "candidate_63985147e27b0b9b0cd87c30",
+    "candidate_6d96360c5819c8a49b54fcfd",
+    "candidate_8134d79db938d1f1823ef33e",
+    "candidate_93fcd56bbf614e3e1e55e1f8",
+    "candidate_a24f751f38e0c8c94dd87e42",
+    "candidate_ad63d7a3d867d44f8baefa33",
+    "candidate_b1a1bd6b96f8ec4507b0c248",
+    "candidate_ba41dc4e5c8470b8d22342a8",
+    "candidate_d154fa99b4397054dcef2108",
+    "candidate_d1e73c692ff53ead1e7eacba",
+    "candidate_e3ac653d8bf91c05c07b1e58",
+    "candidate_e754874c01455a2e973533a7",
+    "candidate_f778e8700d96a1005460b424",
+    "candidate_fdb77fcd2ee109ad1f7e0e5c"
+  ],
+  "scope": "valid training prompts and canonical references/provenance; raw invalid observations retained and flagged; semantic equivalence not proved"
+}

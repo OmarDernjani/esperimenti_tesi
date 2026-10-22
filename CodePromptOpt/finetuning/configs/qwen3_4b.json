@@ -1,0 +1,14 @@
+{
+  "model": "Qwen/Qwen3-4B",
+  "revision": "main",
+  "target_label": "qwen3.5-coder",
+  "seed": 42,
+  "max_length": 2048,
+  "learning_rate": 0.0001,
+  "epochs": 5,
+  "gradient_accumulation_steps": 8,
+  "lora_rank": 16,
+  "lora_alpha": 32,
+  "lora_dropout": 0.05,
+  "early_stopping_patience": 2
+}

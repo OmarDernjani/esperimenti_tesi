@@ -1,0 +1,1843 @@
+[
+  {
+    "comparison_group_id": "conditions_edf21dd0816424c3d65da1ac",
+    "eligible_candidates": 1,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_02b759a59b9e4a9f5c5b38e4"
+  },
+  {
+    "comparison_group_id": "conditions_cd27514471316e43fcdf99af",
+    "eligible_candidates": 3,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_02b759a59b9e4a9f5c5b38e4"
+  },
+  {
+    "comparison_group_id": "conditions_13ab8617d0076ac437015680",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_0e67d70aa4f8331544505abb"
+  },
+  {
+    "comparison_group_id": "conditions_faaeea65a3e1f5aee62dd202",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_0e67d70aa4f8331544505abb"
+  },
+  {
+    "comparison_group_id": "conditions_a6844883fbb6e6284ff6b0ce",
+    "eligible_candidates": 8,
+    "split": "test",
+    "target_model": "qwen3.5",
+    "task_id": "task_11011e1aea2d6d1169a6d95d"
+  },
+  {
+    "comparison_group_id": "conditions_d505e14de3347120c0922f53",
+    "eligible_candidates": 8,
+    "split": "test",
+    "target_model": "qwen3.5",
+    "task_id": "task_11011e1aea2d6d1169a6d95d"
+  },
+  {
+    "comparison_group_id": "conditions_4e267b2b19b73370c8d0194f",
+    "eligible_candidates": 10,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_11011e1aea2d6d1169a6d95d"
+  },
+  {
+    "comparison_group_id": "conditions_5f9435706a94563e1210908b",
+    "eligible_candidates": 10,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_11011e1aea2d6d1169a6d95d"
+  },
+  {
+    "comparison_group_id": "conditions_5624f8387345e8818fc8c7c8",
+    "eligible_candidates": 3,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_1203ea08bc16db58d9ede6a3"
+  },
+  {
+    "comparison_group_id": "conditions_c12cdbb0df32f1345624d921",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_1203ea08bc16db58d9ede6a3"
+  },
+  {
+    "comparison_group_id": "conditions_5469938046f06ec10bd684af",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_1203ea08bc16db58d9ede6a3"
+  },
+  {
+    "comparison_group_id": "conditions_5bba25495a3bd7d4ca9e9ad8",
+    "eligible_candidates": 1,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_1203ea08bc16db58d9ede6a3"
+  },
+  {
+    "comparison_group_id": "conditions_1d4eebf99da4ae111610b04a",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_13df696d31439310b2d28b94"
+  },
+  {
+    "comparison_group_id": "conditions_3f824a054b24ebb75ed9b3d1",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_13df696d31439310b2d28b94"
+  },
+  {
+    "comparison_group_id": "conditions_46099c813afe12873ea07f08",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_13df696d31439310b2d28b94"
+  },
+  {
+    "comparison_group_id": "conditions_dda6bfaabd5bd5843059ec09",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_13df696d31439310b2d28b94"
+  },
+  {
+    "comparison_group_id": "conditions_c5f68e2990af49082fd40105",
+    "eligible_candidates": 3,
+    "split": "validation",
+    "target_model": "qwen3.5",
+    "task_id": "task_14ce6886318b93fabf08435a"
+  },
+  {
+    "comparison_group_id": "conditions_dcea76a2fa1ba2e877c0e1f8",
+    "eligible_candidates": 5,
+    "split": "validation",
+    "target_model": "qwen3.5",
+    "task_id": "task_14ce6886318b93fabf08435a"
+  },
+  {
+    "comparison_group_id": "conditions_0f463bd428043a8300727a26",
+    "eligible_candidates": 4,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_14ce6886318b93fabf08435a"
+  },
+  {
+    "comparison_group_id": "conditions_6ed19fd1f6e73cb3fb873d44",
+    "eligible_candidates": 3,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_14ce6886318b93fabf08435a"
+  },
+  {
+    "comparison_group_id": "conditions_601c3e5165ee5a6e9245cf21",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_1524b82afaddabc9bad48638"
+  },
+  {
+    "comparison_group_id": "conditions_a06d013139c252ee832d5e02",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_1524b82afaddabc9bad48638"
+  },
+  {
+    "comparison_group_id": "conditions_37770fee09673e7aeebffe0e",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_1ead7fe2241151d63b97c267"
+  },
+  {
+    "comparison_group_id": "conditions_59b63b0cc0088fb2f4b47573",
+    "eligible_candidates": 7,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_1ead7fe2241151d63b97c267"
+  },
+  {
+    "comparison_group_id": "conditions_b4faa4c7f80f9c7301c151f5",
+    "eligible_candidates": 9,
+    "split": "test",
+    "target_model": "qwen3.5",
+    "task_id": "task_257a936937548d1f6f2310e3"
+  },
+  {
+    "comparison_group_id": "conditions_bdaf8996e403453cc4c9a4c1",
+    "eligible_candidates": 6,
+    "split": "test",
+    "target_model": "qwen3.5",
+    "task_id": "task_257a936937548d1f6f2310e3"
+  },
+  {
+    "comparison_group_id": "conditions_3c044fdd390db5046483f29f",
+    "eligible_candidates": 4,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_257a936937548d1f6f2310e3"
+  },
+  {
+    "comparison_group_id": "conditions_c1cfd881ca9f1ea706d1737c",
+    "eligible_candidates": 5,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_257a936937548d1f6f2310e3"
+  },
+  {
+    "comparison_group_id": "conditions_63fecb015d37d0667a4e7bfa",
+    "eligible_candidates": 1,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_2af336a553499320616b5b60"
+  },
+  {
+    "comparison_group_id": "conditions_26f9145ae51783ec4bf9a462",
+    "eligible_candidates": 7,
+    "split": "validation",
+    "target_model": "qwen3.5",
+    "task_id": "task_2dd0255221de75accbb5e170"
+  },
+  {
+    "comparison_group_id": "conditions_81f01b532c7b1d62b3ea9e3a",
+    "eligible_candidates": 7,
+    "split": "validation",
+    "target_model": "qwen3.5",
+    "task_id": "task_2dd0255221de75accbb5e170"
+  },
+  {
+    "comparison_group_id": "conditions_6002a7222465dad081f73847",
+    "eligible_candidates": 5,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_2dd0255221de75accbb5e170"
+  },
+  {
+    "comparison_group_id": "conditions_cc2fbf7230c7b8f4710d72be",
+    "eligible_candidates": 9,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_2dd0255221de75accbb5e170"
+  },
+  {
+    "comparison_group_id": "conditions_ea6ff8f677fe3bb068685e6f",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_2deaaa6188aafdb71ab7104b"
+  },
+  {
+    "comparison_group_id": "conditions_8327b6cb642636f98e2fe4bb",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_2deaaa6188aafdb71ab7104b"
+  },
+  {
+    "comparison_group_id": "conditions_e496bbbfc2b6729f30deaf35",
+    "eligible_candidates": 1,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_2deaaa6188aafdb71ab7104b"
+  },
+  {
+    "comparison_group_id": "conditions_1583638de559732904440b15",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_2eaf7351076ba4b841ba96aa"
+  },
+  {
+    "comparison_group_id": "conditions_dcced10388d0c51ea502bc19",
+    "eligible_candidates": 2,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_2eaf7351076ba4b841ba96aa"
+  },
+  {
+    "comparison_group_id": "conditions_449884326895a98aa34f117a",
+    "eligible_candidates": 7,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_2eaf7351076ba4b841ba96aa"
+  },
+  {
+    "comparison_group_id": "conditions_a691c210033911df38e92b2e",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_2eaf7351076ba4b841ba96aa"
+  },
+  {
+    "comparison_group_id": "conditions_a32198260985e6f8193e90e0",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_2fd45dc56a392c7a473c6935"
+  },
+  {
+    "comparison_group_id": "conditions_d1b51ca931dbe38c1597d0ac",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_2fd45dc56a392c7a473c6935"
+  },
+  {
+    "comparison_group_id": "conditions_c337969db6ec4d4d7f309137",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_2fd45dc56a392c7a473c6935"
+  },
+  {
+    "comparison_group_id": "conditions_62622d936790eddb71ce6a68",
+    "eligible_candidates": 7,
+    "split": "validation",
+    "target_model": "qwen3.5",
+    "task_id": "task_304f464ff2acd7b96b46f8a3"
+  },
+  {
+    "comparison_group_id": "conditions_83bac4e91f1567d48698d116",
+    "eligible_candidates": 9,
+    "split": "validation",
+    "target_model": "qwen3.5",
+    "task_id": "task_304f464ff2acd7b96b46f8a3"
+  },
+  {
+    "comparison_group_id": "conditions_b35d4b0effed2913bf4339ee",
+    "eligible_candidates": 11,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_304f464ff2acd7b96b46f8a3"
+  },
+  {
+    "comparison_group_id": "conditions_dd39c0b8af2aa940326a7654",
+    "eligible_candidates": 13,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_304f464ff2acd7b96b46f8a3"
+  },
+  {
+    "comparison_group_id": "conditions_0123f7601cb0af1756d56166",
+    "eligible_candidates": 7,
+    "split": "test",
+    "target_model": "qwen3.5",
+    "task_id": "task_314e78c9db007426dc69b996"
+  },
+  {
+    "comparison_group_id": "conditions_bde808189b251ca71c6945ac",
+    "eligible_candidates": 2,
+    "split": "test",
+    "target_model": "qwen3.5",
+    "task_id": "task_314e78c9db007426dc69b996"
+  },
+  {
+    "comparison_group_id": "conditions_9a6ca698a7e23fc3982ed62a",
+    "eligible_candidates": 6,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_314e78c9db007426dc69b996"
+  },
+  {
+    "comparison_group_id": "conditions_cc2c5dab928d9477bbc52120",
+    "eligible_candidates": 3,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_314e78c9db007426dc69b996"
+  },
+  {
+    "comparison_group_id": "conditions_4c4ca187364919bd8391e164",
+    "eligible_candidates": 4,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_342deffc63310adb38e638ce"
+  },
+  {
+    "comparison_group_id": "conditions_7ab0a419e6cf29d6bddd059c",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_342deffc63310adb38e638ce"
+  },
+  {
+    "comparison_group_id": "conditions_9db72c04c80ba193a3c84bad",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_342deffc63310adb38e638ce"
+  },
+  {
+    "comparison_group_id": "conditions_f79810cc2a520c4bd1d7672d",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_342deffc63310adb38e638ce"
+  },
+  {
+    "comparison_group_id": "conditions_0d62e95b1b3b80e2acd7576a",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_34cbb10739ab788f393784e5"
+  },
+  {
+    "comparison_group_id": "conditions_5ee63d4c18a371c22fe3a3f1",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_34cbb10739ab788f393784e5"
+  },
+  {
+    "comparison_group_id": "conditions_8e3fc2ca3533e9cbd63cd1df",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_34cbb10739ab788f393784e5"
+  },
+  {
+    "comparison_group_id": "conditions_e46a213259e219723f1f2861",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_34cbb10739ab788f393784e5"
+  },
+  {
+    "comparison_group_id": "conditions_1b8b696c4aeae7685bb53c4f",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_35933c32ea473cc636cdc833"
+  },
+  {
+    "comparison_group_id": "conditions_b2c7a4e7e345f9c0f74ca578",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_35933c32ea473cc636cdc833"
+  },
+  {
+    "comparison_group_id": "conditions_781489ec5d3cf0bd5c1fdf12",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_35933c32ea473cc636cdc833"
+  },
+  {
+    "comparison_group_id": "conditions_ba5e97e5067afc8d45068686",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_35933c32ea473cc636cdc833"
+  },
+  {
+    "comparison_group_id": "conditions_011edfb7cedcf16e9cb10dac",
+    "eligible_candidates": 4,
+    "split": "validation",
+    "target_model": "qwen3.5",
+    "task_id": "task_359b4894f04d41eaa4641e85"
+  },
+  {
+    "comparison_group_id": "conditions_e0c62cc980861c467cc9bdf7",
+    "eligible_candidates": 7,
+    "split": "validation",
+    "target_model": "qwen3.5",
+    "task_id": "task_359b4894f04d41eaa4641e85"
+  },
+  {
+    "comparison_group_id": "conditions_adaf495141f50c5095fa59b5",
+    "eligible_candidates": 9,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_359b4894f04d41eaa4641e85"
+  },
+  {
+    "comparison_group_id": "conditions_ba34b0f66539574337c79abe",
+    "eligible_candidates": 10,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_359b4894f04d41eaa4641e85"
+  },
+  {
+    "comparison_group_id": "conditions_632b46b6cf6d96b892cea273",
+    "eligible_candidates": 51,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_37b36c6edf5790220899a88a"
+  },
+  {
+    "comparison_group_id": "conditions_66cd060867e89dea0fcf9374",
+    "eligible_candidates": 13,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_37b36c6edf5790220899a88a"
+  },
+  {
+    "comparison_group_id": "conditions_31644f4a7315a3c2ad333079",
+    "eligible_candidates": 48,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_37b36c6edf5790220899a88a"
+  },
+  {
+    "comparison_group_id": "conditions_7ab61ef5cda3044ea09e9cac",
+    "eligible_candidates": 7,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_3c458e2c10b8cd47b002dc83"
+  },
+  {
+    "comparison_group_id": "conditions_0492aef4ce7ee1873aa3fbd4",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_3c458e2c10b8cd47b002dc83"
+  },
+  {
+    "comparison_group_id": "conditions_304d128a75820b29933f1f01",
+    "eligible_candidates": 1,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_417a8ae7dfe8f3bc89580058"
+  },
+  {
+    "comparison_group_id": "conditions_a413ffacbdc1801a7007b590",
+    "eligible_candidates": 3,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_417a8ae7dfe8f3bc89580058"
+  },
+  {
+    "comparison_group_id": "conditions_99c9b62b5c96edbc39492eb8",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_41fccc18051496d8da3077b0"
+  },
+  {
+    "comparison_group_id": "conditions_e19cd8ca12e56acfa4cdcdd1",
+    "eligible_candidates": 2,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_41fccc18051496d8da3077b0"
+  },
+  {
+    "comparison_group_id": "conditions_a2bd2b6fa690c50ab3331011",
+    "eligible_candidates": 1,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_41fccc18051496d8da3077b0"
+  },
+  {
+    "comparison_group_id": "conditions_ab2f86e116df55698fd0d775",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_41fccc18051496d8da3077b0"
+  },
+  {
+    "comparison_group_id": "conditions_a573d35079b2c0652811468b",
+    "eligible_candidates": 8,
+    "split": "test",
+    "target_model": "qwen3.5",
+    "task_id": "task_42ee743e6a99240cefd2be66"
+  },
+  {
+    "comparison_group_id": "conditions_bd6a3720bfeee159f52d208b",
+    "eligible_candidates": 7,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_42ee743e6a99240cefd2be66"
+  },
+  {
+    "comparison_group_id": "conditions_8c0f51e2b21a10dadea255e1",
+    "eligible_candidates": 4,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_43642ac2d546f1273f7b9feb"
+  },
+  {
+    "comparison_group_id": "conditions_19ef23d31c3bca56cb91f750",
+    "eligible_candidates": 7,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_43642ac2d546f1273f7b9feb"
+  },
+  {
+    "comparison_group_id": "conditions_219042ec1a990e7656e894d2",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_474759b85dba372624965a13"
+  },
+  {
+    "comparison_group_id": "conditions_345f688c01e36dc94adbf258",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_474759b85dba372624965a13"
+  },
+  {
+    "comparison_group_id": "conditions_223ab8daa0876808f98f563a",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_474759b85dba372624965a13"
+  },
+  {
+    "comparison_group_id": "conditions_b31c52968ed67d124988e43e",
+    "eligible_candidates": 1,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_474759b85dba372624965a13"
+  },
+  {
+    "comparison_group_id": "conditions_19f75374dc3a89be6d0c7dbf",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_4939834596cece0769ef6e45"
+  },
+  {
+    "comparison_group_id": "conditions_30ad6b5227bf8ab99307cde0",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_4939834596cece0769ef6e45"
+  },
+  {
+    "comparison_group_id": "conditions_3dfeb6f409d1caefd744db63",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_4939834596cece0769ef6e45"
+  },
+  {
+    "comparison_group_id": "conditions_6fcf6e25c54860f67bfe0e9c",
+    "eligible_candidates": 47,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_4939834596cece0769ef6e45"
+  },
+  {
+    "comparison_group_id": "conditions_2cbf7db29d965b4fcb285c91",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_4f17f83243f6ae677626344f"
+  },
+  {
+    "comparison_group_id": "conditions_692a75702fb338efc953bcd0",
+    "eligible_candidates": 1,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_4f17f83243f6ae677626344f"
+  },
+  {
+    "comparison_group_id": "conditions_f7bbfa9df0dee6f29174a5b5",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_4f17f83243f6ae677626344f"
+  },
+  {
+    "comparison_group_id": "conditions_b940498e068625b573c74463",
+    "eligible_candidates": 11,
+    "split": "validation",
+    "target_model": "qwen3.5",
+    "task_id": "task_50f04de1119bcf6a77e863ee"
+  },
+  {
+    "comparison_group_id": "conditions_c7b6d91a2f7dd7d682b43f09",
+    "eligible_candidates": 10,
+    "split": "validation",
+    "target_model": "qwen3.5",
+    "task_id": "task_50f04de1119bcf6a77e863ee"
+  },
+  {
+    "comparison_group_id": "conditions_211505e3e565538d66368f6c",
+    "eligible_candidates": 11,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_50f04de1119bcf6a77e863ee"
+  },
+  {
+    "comparison_group_id": "conditions_b9bb125f8331226ffd6937fb",
+    "eligible_candidates": 11,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_50f04de1119bcf6a77e863ee"
+  },
+  {
+    "comparison_group_id": "conditions_0b3abceac08b89b64ef6c3c3",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_5720ec9cf7491446bb5f1938"
+  },
+  {
+    "comparison_group_id": "conditions_b4afa81b1c1d8112cca988de",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_5720ec9cf7491446bb5f1938"
+  },
+  {
+    "comparison_group_id": "conditions_8b9384772a7dcdb6cfcca8c6",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_5931a512ceecdf3e86859e5b"
+  },
+  {
+    "comparison_group_id": "conditions_3ab271129bfeeb088c747033",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_5931a512ceecdf3e86859e5b"
+  },
+  {
+    "comparison_group_id": "conditions_249f2b43d9a528919db788d2",
+    "eligible_candidates": 7,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_59b82fcdd426e799a1224fc0"
+  },
+  {
+    "comparison_group_id": "conditions_27f8f7d0e2b983cf33493efa",
+    "eligible_candidates": 1,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_59b82fcdd426e799a1224fc0"
+  },
+  {
+    "comparison_group_id": "conditions_59b582ce18a29d20ce520bbd",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_59b82fcdd426e799a1224fc0"
+  },
+  {
+    "comparison_group_id": "conditions_b9e1b130ad0796170f7e38b0",
+    "eligible_candidates": 7,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_6068e215c4262aa86af8ed31"
+  },
+  {
+    "comparison_group_id": "conditions_ce71b90307fdf127d79605f9",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_6068e215c4262aa86af8ed31"
+  },
+  {
+    "comparison_group_id": "conditions_af40c16813700bbac3062b62",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_6068e215c4262aa86af8ed31"
+  },
+  {
+    "comparison_group_id": "conditions_e064aa34fb1e7db8a378d515",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_6068e215c4262aa86af8ed31"
+  },
+  {
+    "comparison_group_id": "conditions_02297c1ee3a6fc8c71a98ed7",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_66a78f848bc9cbf94a33e745"
+  },
+  {
+    "comparison_group_id": "conditions_631491b0a65e888e2184245b",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_66a78f848bc9cbf94a33e745"
+  },
+  {
+    "comparison_group_id": "conditions_9cb30cb798e838b9d799bf0d",
+    "eligible_candidates": 6,
+    "split": "validation",
+    "target_model": "qwen3.5",
+    "task_id": "task_676f0878d4d712b47b342156"
+  },
+  {
+    "comparison_group_id": "conditions_00a55ade9e8e7dfbf22fc569",
+    "eligible_candidates": 10,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_676f0878d4d712b47b342156"
+  },
+  {
+    "comparison_group_id": "conditions_20edeea3724a1b3aadc49497",
+    "eligible_candidates": 3,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_676f0878d4d712b47b342156"
+  },
+  {
+    "comparison_group_id": "conditions_61112eae49bd1fe500f75cb0",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_6b70a6895dbe367a58762384"
+  },
+  {
+    "comparison_group_id": "conditions_c14dea1cce85caab8afca20f",
+    "eligible_candidates": 3,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_6b70a6895dbe367a58762384"
+  },
+  {
+    "comparison_group_id": "conditions_e9d39bae96d5513ec3d04fb6",
+    "eligible_candidates": 7,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_6b70a6895dbe367a58762384"
+  },
+  {
+    "comparison_group_id": "conditions_10c77a1c2e2b8612a16d391a",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_6bfc2263ebccef3e22e8b317"
+  },
+  {
+    "comparison_group_id": "conditions_4cb7ce6dbdfdd9fdbcb73575",
+    "eligible_candidates": 1,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_6bfc2263ebccef3e22e8b317"
+  },
+  {
+    "comparison_group_id": "conditions_425fa83a5d4823504f3da013",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_6bfc2263ebccef3e22e8b317"
+  },
+  {
+    "comparison_group_id": "conditions_6f08f4f1c5cb98f45718d3f2",
+    "eligible_candidates": 2,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_6bfc2263ebccef3e22e8b317"
+  },
+  {
+    "comparison_group_id": "conditions_9838c94b05775e80dd4ca45d",
+    "eligible_candidates": 24,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_6c7355dbee906ad457ef7fe0"
+  },
+  {
+    "comparison_group_id": "conditions_299eb5ee3763a754935c82eb",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_6da94b30845e2d1f76361fd2"
+  },
+  {
+    "comparison_group_id": "conditions_bbd59bd0bc708b5df23f16e9",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_6da94b30845e2d1f76361fd2"
+  },
+  {
+    "comparison_group_id": "conditions_0a1d235f4eb5d685ea391ea0",
+    "eligible_candidates": 24,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_7353b70f66c5a34aecdd9878"
+  },
+  {
+    "comparison_group_id": "conditions_162f0d34951a24ddb3f2d68c",
+    "eligible_candidates": 39,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_7353b70f66c5a34aecdd9878"
+  },
+  {
+    "comparison_group_id": "conditions_acab2b01d671c0cfd2cdac0e",
+    "eligible_candidates": 2,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_7353b70f66c5a34aecdd9878"
+  },
+  {
+    "comparison_group_id": "conditions_cb42fa3b334d79a62115780e",
+    "eligible_candidates": 19,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_7ab383dee8e122729c15a044"
+  },
+  {
+    "comparison_group_id": "conditions_07c979c52a7601862eacb712",
+    "eligible_candidates": 7,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_7b0ac38d20c6ada0dcdd337e"
+  },
+  {
+    "comparison_group_id": "conditions_f6d5396afd511ec3f11b2e25",
+    "eligible_candidates": 4,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_7b0ac38d20c6ada0dcdd337e"
+  },
+  {
+    "comparison_group_id": "conditions_3cfda6548c8082c7e1eff731",
+    "eligible_candidates": 35,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_7b0ac38d20c6ada0dcdd337e"
+  },
+  {
+    "comparison_group_id": "conditions_fa99bac3ac5048187dbd6d9f",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_7b0ac38d20c6ada0dcdd337e"
+  },
+  {
+    "comparison_group_id": "conditions_08edf5c58a7e69f3cce76b0e",
+    "eligible_candidates": 1,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_7b34e6107378316795ac03f4"
+  },
+  {
+    "comparison_group_id": "conditions_b27f5e7b4a87269c170b585b",
+    "eligible_candidates": 13,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_7b34e6107378316795ac03f4"
+  },
+  {
+    "comparison_group_id": "conditions_de3c67150e45b9dffe3e497f",
+    "eligible_candidates": 16,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_7b34e6107378316795ac03f4"
+  },
+  {
+    "comparison_group_id": "conditions_3b5a386dc9c6e3c376f69600",
+    "eligible_candidates": 1,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_8222b4e15892d06428ee518d"
+  },
+  {
+    "comparison_group_id": "conditions_5a296c532c0e44bb00d74d5e",
+    "eligible_candidates": 1,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_8222b4e15892d06428ee518d"
+  },
+  {
+    "comparison_group_id": "conditions_9f332662fc9e86485a0dfcd9",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_825a3a29c9c3a506ee632222"
+  },
+  {
+    "comparison_group_id": "conditions_c6f6cbf4eda04c9c5eeb069f",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_825a3a29c9c3a506ee632222"
+  },
+  {
+    "comparison_group_id": "conditions_b0a5eb4ccb5701bebad43a45",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_825a3a29c9c3a506ee632222"
+  },
+  {
+    "comparison_group_id": "conditions_bad526851704e205dbfc4064",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_825a3a29c9c3a506ee632222"
+  },
+  {
+    "comparison_group_id": "conditions_a1d4895b44a292a2e222e54b",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_83f094b85f84c87797071476"
+  },
+  {
+    "comparison_group_id": "conditions_f44ef89cf93335d0f178f0aa",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_83f094b85f84c87797071476"
+  },
+  {
+    "comparison_group_id": "conditions_626beb7b052db887251063d5",
+    "eligible_candidates": 2,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_83f094b85f84c87797071476"
+  },
+  {
+    "comparison_group_id": "conditions_cdce78d75685978c87732b88",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_83f094b85f84c87797071476"
+  },
+  {
+    "comparison_group_id": "conditions_2b2c65c283bf4bf3861f215e",
+    "eligible_candidates": 1,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_85da4e23b5953bdc975806ee"
+  },
+  {
+    "comparison_group_id": "conditions_573c444f5134a8528cf3225a",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_85da4e23b5953bdc975806ee"
+  },
+  {
+    "comparison_group_id": "conditions_6589af006b131ec4233d3416",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_85da4e23b5953bdc975806ee"
+  },
+  {
+    "comparison_group_id": "conditions_dc0c32e77c12c0434a24b841",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_85da4e23b5953bdc975806ee"
+  },
+  {
+    "comparison_group_id": "conditions_cdaaba5a4ec250d7afad69a7",
+    "eligible_candidates": 9,
+    "split": "validation",
+    "target_model": "qwen3.5",
+    "task_id": "task_8ac553d23620fb6d969e2d79"
+  },
+  {
+    "comparison_group_id": "conditions_51cf8f1ab099c1d466f5a500",
+    "eligible_candidates": 6,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_8ac553d23620fb6d969e2d79"
+  },
+  {
+    "comparison_group_id": "conditions_b09e515fc7544438889b278f",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_8cae2dfa93254980a6112571"
+  },
+  {
+    "comparison_group_id": "conditions_ee7317445fe18bfa33ed444a",
+    "eligible_candidates": 4,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_8cae2dfa93254980a6112571"
+  },
+  {
+    "comparison_group_id": "conditions_2b23af3faf7bc2db0a5db16d",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_8cae2dfa93254980a6112571"
+  },
+  {
+    "comparison_group_id": "conditions_7e1afcf2890ef61f13cd1b96",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_8cae2dfa93254980a6112571"
+  },
+  {
+    "comparison_group_id": "conditions_0cc6c77122228d2b09313171",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_90e3a9c11c0625f94e172f34"
+  },
+  {
+    "comparison_group_id": "conditions_6740c3d5d87777e46fd2319d",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_90e3a9c11c0625f94e172f34"
+  },
+  {
+    "comparison_group_id": "conditions_2fd07a97e82c4e017357a399",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_90e3a9c11c0625f94e172f34"
+  },
+  {
+    "comparison_group_id": "conditions_da9e5c25b1dac3b6ff489053",
+    "eligible_candidates": 7,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_90e3a9c11c0625f94e172f34"
+  },
+  {
+    "comparison_group_id": "conditions_42343fce7cc922f5665281f0",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_91f1b3ed3b6d6509ee9d6658"
+  },
+  {
+    "comparison_group_id": "conditions_850617e47c25cc1a24b74b6c",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_91f1b3ed3b6d6509ee9d6658"
+  },
+  {
+    "comparison_group_id": "conditions_0178ac05494716c34cabc369",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_91f1b3ed3b6d6509ee9d6658"
+  },
+  {
+    "comparison_group_id": "conditions_12f5f4a655537700428d06eb",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_91f1b3ed3b6d6509ee9d6658"
+  },
+  {
+    "comparison_group_id": "conditions_fd070db88528f175681a009c",
+    "eligible_candidates": 7,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_943c5ade87b93ad7fd1efd91"
+  },
+  {
+    "comparison_group_id": "conditions_138e6e5680cbe56443639156",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_943c5ade87b93ad7fd1efd91"
+  },
+  {
+    "comparison_group_id": "conditions_8378b93c1eb12e6ddb09f443",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_94fefc646d1989e8619fbfab"
+  },
+  {
+    "comparison_group_id": "conditions_9f1fa9410ffee651a31624c8",
+    "eligible_candidates": 3,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_960cfb62eeae0bc46c225c01"
+  },
+  {
+    "comparison_group_id": "conditions_111151213631b828e1b73158",
+    "eligible_candidates": 3,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_960cfb62eeae0bc46c225c01"
+  },
+  {
+    "comparison_group_id": "conditions_b7b6c710911fef7a78b8afbc",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_9bf996dd8b5d3f7dbd0c6ea0"
+  },
+  {
+    "comparison_group_id": "conditions_ba05db452b3111bf816d3493",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_9bf996dd8b5d3f7dbd0c6ea0"
+  },
+  {
+    "comparison_group_id": "conditions_58ee3eeca72587bcaea308f5",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_9bf996dd8b5d3f7dbd0c6ea0"
+  },
+  {
+    "comparison_group_id": "conditions_c07992a6d398ac07605323a5",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_9bf996dd8b5d3f7dbd0c6ea0"
+  },
+  {
+    "comparison_group_id": "conditions_43ca05aaef06cc61b529e1c1",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_a49554e7734dc661eda6c5d1"
+  },
+  {
+    "comparison_group_id": "conditions_61a8896c6d0b200d2cb323cd",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_a49554e7734dc661eda6c5d1"
+  },
+  {
+    "comparison_group_id": "conditions_9c90f505db8b3e98968f35f8",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_a49554e7734dc661eda6c5d1"
+  },
+  {
+    "comparison_group_id": "conditions_fbaa09380ba550d5c53f5a2e",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_a49554e7734dc661eda6c5d1"
+  },
+  {
+    "comparison_group_id": "conditions_0d918b8da6653d3fd23564fb",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_b2fdb50b966918bd568c4ad7"
+  },
+  {
+    "comparison_group_id": "conditions_48498c27e17f5e1790833dbd",
+    "eligible_candidates": 1,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_b2fdb50b966918bd568c4ad7"
+  },
+  {
+    "comparison_group_id": "conditions_667df7d9c5a10a41c717cb11",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_b2fdb50b966918bd568c4ad7"
+  },
+  {
+    "comparison_group_id": "conditions_ca744b68f092bd086421d08e",
+    "eligible_candidates": 13,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_b2fdb50b966918bd568c4ad7"
+  },
+  {
+    "comparison_group_id": "conditions_a31c5d0443123d67b1564d91",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_b56c641dcbd25c4abd11bde6"
+  },
+  {
+    "comparison_group_id": "conditions_ddf7bcd8d46ac4c85869fa87",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_b56c641dcbd25c4abd11bde6"
+  },
+  {
+    "comparison_group_id": "conditions_a1940bc4cc3179edf3c34920",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_b56c641dcbd25c4abd11bde6"
+  },
+  {
+    "comparison_group_id": "conditions_d0e9e1d4902db7a2a3f4ae62",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_b56c641dcbd25c4abd11bde6"
+  },
+  {
+    "comparison_group_id": "conditions_4d2a2970e4a6fab125fe300b",
+    "eligible_candidates": 18,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_b5b04eac54b520db980c2ef8"
+  },
+  {
+    "comparison_group_id": "conditions_6b76370dfe0d8187b6be39ba",
+    "eligible_candidates": 2,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_b5b04eac54b520db980c2ef8"
+  },
+  {
+    "comparison_group_id": "conditions_28930e590af989b1c494836b",
+    "eligible_candidates": 4,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_b6ab160ae155092e4e3aa012"
+  },
+  {
+    "comparison_group_id": "conditions_f02b0242bb7fcbbb232213b3",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_b6ab160ae155092e4e3aa012"
+  },
+  {
+    "comparison_group_id": "conditions_13a3a911c143ea1c89e6d96a",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_b6ab160ae155092e4e3aa012"
+  },
+  {
+    "comparison_group_id": "conditions_8af30eee8b9733787b2cce32",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_b6ab160ae155092e4e3aa012"
+  },
+  {
+    "comparison_group_id": "conditions_8b21c5515e2ad7c1cc57748d",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_c0bd585a8322fcfa9328f4c2"
+  },
+  {
+    "comparison_group_id": "conditions_dcb54ee405c85642c8d12d5b",
+    "eligible_candidates": 3,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_c0bd585a8322fcfa9328f4c2"
+  },
+  {
+    "comparison_group_id": "conditions_9482a117a99a488b8e4f04d6",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_c0bd585a8322fcfa9328f4c2"
+  },
+  {
+    "comparison_group_id": "conditions_a0944255da56eb71208578ac",
+    "eligible_candidates": 2,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_c0bd585a8322fcfa9328f4c2"
+  },
+  {
+    "comparison_group_id": "conditions_81b8530ac6562b25d5f39380",
+    "eligible_candidates": 7,
+    "split": "test",
+    "target_model": "qwen3.5",
+    "task_id": "task_c263b3d8452e00de1ed37789"
+  },
+  {
+    "comparison_group_id": "conditions_16214d5d94e21b218e71ff53",
+    "eligible_candidates": 9,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_c263b3d8452e00de1ed37789"
+  },
+  {
+    "comparison_group_id": "conditions_de7b05064081f2c5f72ca18f",
+    "eligible_candidates": 2,
+    "split": "validation",
+    "target_model": "qwen3.5",
+    "task_id": "task_c4b997fd5d2140e5f1841eba"
+  },
+  {
+    "comparison_group_id": "conditions_e085c14a0aa63e6eb54ad939",
+    "eligible_candidates": 6,
+    "split": "validation",
+    "target_model": "qwen3.5",
+    "task_id": "task_c4b997fd5d2140e5f1841eba"
+  },
+  {
+    "comparison_group_id": "conditions_1a25020c015e4baf8b3efdd4",
+    "eligible_candidates": 6,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_c4b997fd5d2140e5f1841eba"
+  },
+  {
+    "comparison_group_id": "conditions_b450a72911a77a455d146019",
+    "eligible_candidates": 1,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_c4b997fd5d2140e5f1841eba"
+  },
+  {
+    "comparison_group_id": "conditions_25718bd73aa555943c8f2df8",
+    "eligible_candidates": 7,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_c58dece4120f4504a5f4fefe"
+  },
+  {
+    "comparison_group_id": "conditions_4f6a4aab7edd84cbff9e85de",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_c58dece4120f4504a5f4fefe"
+  },
+  {
+    "comparison_group_id": "conditions_c8fc27690cf770f2e463283a",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_c58dece4120f4504a5f4fefe"
+  },
+  {
+    "comparison_group_id": "conditions_f4bfb5f18a0592df47ec0e92",
+    "eligible_candidates": 2,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_c58dece4120f4504a5f4fefe"
+  },
+  {
+    "comparison_group_id": "conditions_5db3677ecb8eff3ac582b40e",
+    "eligible_candidates": 12,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_c5ac609184f9ba3fcf51d021"
+  },
+  {
+    "comparison_group_id": "conditions_8b11e0a5bcf1f5096825f98a",
+    "eligible_candidates": 13,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_c5ac609184f9ba3fcf51d021"
+  },
+  {
+    "comparison_group_id": "conditions_5a79313f3729c4056de56dd0",
+    "eligible_candidates": 14,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_c5ac609184f9ba3fcf51d021"
+  },
+  {
+    "comparison_group_id": "conditions_6a4ba0d67728d6d6f174c647",
+    "eligible_candidates": 41,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_c5ac609184f9ba3fcf51d021"
+  },
+  {
+    "comparison_group_id": "conditions_60d25184c97c9f8ab12a4486",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_ccc82ea1b31a5490a4c86eae"
+  },
+  {
+    "comparison_group_id": "conditions_efabeeee18a8055732fe02ee",
+    "eligible_candidates": 3,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_ccc82ea1b31a5490a4c86eae"
+  },
+  {
+    "comparison_group_id": "conditions_af4ed42424b725e8dd2ee0c8",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_ccc82ea1b31a5490a4c86eae"
+  },
+  {
+    "comparison_group_id": "conditions_903ee909f200fc16c316adfc",
+    "eligible_candidates": 4,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_cd9e6000ffae9ee6b4b658ca"
+  },
+  {
+    "comparison_group_id": "conditions_6051d7689b125a706d93ee5a",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_cd9e6000ffae9ee6b4b658ca"
+  },
+  {
+    "comparison_group_id": "conditions_555a518d49352b5cccad6a1b",
+    "eligible_candidates": 1,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_d4d07d90f76a9ee6da4a0d52"
+  },
+  {
+    "comparison_group_id": "conditions_df5f92c114d11db33d6fb1fe",
+    "eligible_candidates": 14,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_d4d07d90f76a9ee6da4a0d52"
+  },
+  {
+    "comparison_group_id": "conditions_b0cecab6f74b50ff87f93da3",
+    "eligible_candidates": 5,
+    "split": "test",
+    "target_model": "qwen3.5",
+    "task_id": "task_d55dd2ccec8ee2515efd63f7"
+  },
+  {
+    "comparison_group_id": "conditions_d4b0e2f04438e48a01be499b",
+    "eligible_candidates": 2,
+    "split": "test",
+    "target_model": "qwen3.5",
+    "task_id": "task_d55dd2ccec8ee2515efd63f7"
+  },
+  {
+    "comparison_group_id": "conditions_27b9c8d20ede9c4ec7d0c3aa",
+    "eligible_candidates": 1,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_d55dd2ccec8ee2515efd63f7"
+  },
+  {
+    "comparison_group_id": "conditions_9bd226416167b63aae037b77",
+    "eligible_candidates": 8,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_d55dd2ccec8ee2515efd63f7"
+  },
+  {
+    "comparison_group_id": "conditions_8539f1a22a4db54f21c4e53e",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_d59e47a8ee7025dbd3860651"
+  },
+  {
+    "comparison_group_id": "conditions_908fb31dd1583f31fa3ac53e",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_d59e47a8ee7025dbd3860651"
+  },
+  {
+    "comparison_group_id": "conditions_5b70fa7a24ed7997c49820dc",
+    "eligible_candidates": 12,
+    "split": "validation",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_db4b4fe60b637b446e605e53"
+  },
+  {
+    "comparison_group_id": "conditions_d10fb9d7252be77810ace76b",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_dbf9be98aae3db786be66dc2"
+  },
+  {
+    "comparison_group_id": "conditions_e46dfee16e77c98a562a8c84",
+    "eligible_candidates": 9,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_dbf9be98aae3db786be66dc2"
+  },
+  {
+    "comparison_group_id": "conditions_32db752a878c004473349a82",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_dbf9be98aae3db786be66dc2"
+  },
+  {
+    "comparison_group_id": "conditions_4be8e97fe25969abc66cef3d",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_dbf9be98aae3db786be66dc2"
+  },
+  {
+    "comparison_group_id": "conditions_6cee4a8ef2bc7d3aaae0bbe9",
+    "eligible_candidates": 1,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_dd210c9b0f2a268f8fd51eb3"
+  },
+  {
+    "comparison_group_id": "conditions_189ca538999aba655145e43c",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_de21b8fb31b8626df2a925d8"
+  },
+  {
+    "comparison_group_id": "conditions_346e241275c19a7ffabb0869",
+    "eligible_candidates": 3,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_de21b8fb31b8626df2a925d8"
+  },
+  {
+    "comparison_group_id": "conditions_6dd5b44927b23097bab6e613",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_de21b8fb31b8626df2a925d8"
+  },
+  {
+    "comparison_group_id": "conditions_643adaebfa4f4a49a2843cac",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_de9cbdd9430ebc1b1edc0236"
+  },
+  {
+    "comparison_group_id": "conditions_6ed15e5fcd761d19a20eff7e",
+    "eligible_candidates": 7,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_de9cbdd9430ebc1b1edc0236"
+  },
+  {
+    "comparison_group_id": "conditions_6495ed33ca4d0be36c3ca88b",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_def112887b811423748ed7e9"
+  },
+  {
+    "comparison_group_id": "conditions_428ae2ea282197b5181e209e",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_def112887b811423748ed7e9"
+  },
+  {
+    "comparison_group_id": "conditions_0e8841419ecb934054d3b663",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_df40d1a4f8c29ca4524a63a3"
+  },
+  {
+    "comparison_group_id": "conditions_e06c46fa6f4b2344c8806e95",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_df40d1a4f8c29ca4524a63a3"
+  },
+  {
+    "comparison_group_id": "conditions_4d9e0a51b31ca2b462d95261",
+    "eligible_candidates": 6,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_df40d1a4f8c29ca4524a63a3"
+  },
+  {
+    "comparison_group_id": "conditions_b329c6dec19304bbdfb68a20",
+    "eligible_candidates": 3,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_df40d1a4f8c29ca4524a63a3"
+  },
+  {
+    "comparison_group_id": "conditions_3903f198814dad3543dd9848",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_e07b1b362e2e09a98cf7f067"
+  },
+  {
+    "comparison_group_id": "conditions_217b36980f7ed5a2ae111be3",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_e07b1b362e2e09a98cf7f067"
+  },
+  {
+    "comparison_group_id": "conditions_ea24ce5374524493de65fdf6",
+    "eligible_candidates": 3,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_e13e9ccf77c7519abf7e920d"
+  },
+  {
+    "comparison_group_id": "conditions_778c95ded0a8fcbeb91bf343",
+    "eligible_candidates": 4,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_e13e9ccf77c7519abf7e920d"
+  },
+  {
+    "comparison_group_id": "conditions_c8c9242d4c24113fee01840b",
+    "eligible_candidates": 11,
+    "split": "test",
+    "target_model": "qwen3.5",
+    "task_id": "task_e347d714d6e92a8d55f046c1"
+  },
+  {
+    "comparison_group_id": "conditions_f1914b64465bba3dd06e3e84",
+    "eligible_candidates": 6,
+    "split": "test",
+    "target_model": "qwen3.5",
+    "task_id": "task_e347d714d6e92a8d55f046c1"
+  },
+  {
+    "comparison_group_id": "conditions_1c3c89817fd3747ff130972b",
+    "eligible_candidates": 11,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_e347d714d6e92a8d55f046c1"
+  },
+  {
+    "comparison_group_id": "conditions_82b4654e297ec07e29ed460d",
+    "eligible_candidates": 4,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_e347d714d6e92a8d55f046c1"
+  },
+  {
+    "comparison_group_id": "conditions_376b0d41dd469219643508c9",
+    "eligible_candidates": 7,
+    "split": "test",
+    "target_model": "qwen3.5",
+    "task_id": "task_e73424defe330e4585d61564"
+  },
+  {
+    "comparison_group_id": "conditions_93a160e52550e0df22f68aec",
+    "eligible_candidates": 2,
+    "split": "test",
+    "target_model": "qwen3.5",
+    "task_id": "task_e73424defe330e4585d61564"
+  },
+  {
+    "comparison_group_id": "conditions_93d927e335a01d8a8c9fc558",
+    "eligible_candidates": 7,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_e73424defe330e4585d61564"
+  },
+  {
+    "comparison_group_id": "conditions_d830a406ce9b89c9cba02ae2",
+    "eligible_candidates": 7,
+    "split": "test",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_e73424defe330e4585d61564"
+  },
+  {
+    "comparison_group_id": "conditions_1c2fea5a582bc7f14b85e93b",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_f23bbf6828763cbbd3e12237"
+  },
+  {
+    "comparison_group_id": "conditions_c6d0ac915864474d62032eed",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_f23bbf6828763cbbd3e12237"
+  },
+  {
+    "comparison_group_id": "conditions_b1d44f4ca0f9fd9137a0a52c",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_f23bbf6828763cbbd3e12237"
+  },
+  {
+    "comparison_group_id": "conditions_e8d340f9690a453744121575",
+    "eligible_candidates": 8,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_f23bbf6828763cbbd3e12237"
+  },
+  {
+    "comparison_group_id": "conditions_3456ea8e81c7eca7d3566a11",
+    "eligible_candidates": 12,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_f4ad62ee759f4a8838428d75"
+  },
+  {
+    "comparison_group_id": "conditions_367eb3f646348d8803013f3f",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_f4ad62ee759f4a8838428d75"
+  },
+  {
+    "comparison_group_id": "conditions_0f2982dd49898c9e869d406d",
+    "eligible_candidates": 5,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_fa26c21f66eef62fb3bf7371"
+  },
+  {
+    "comparison_group_id": "conditions_ba9ef75148da156adbc3d2ce",
+    "eligible_candidates": 7,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_fa26c21f66eef62fb3bf7371"
+  },
+  {
+    "comparison_group_id": "conditions_113800670746443dd176dd1d",
+    "eligible_candidates": 7,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_fa26c21f66eef62fb3bf7371"
+  },
+  {
+    "comparison_group_id": "conditions_9603bce0a3984f15f547145c",
+    "eligible_candidates": 3,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_fa26c21f66eef62fb3bf7371"
+  },
+  {
+    "comparison_group_id": "conditions_295f14cd125276e3f9b3230b",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_faae9a64bd03b223386515b9"
+  },
+  {
+    "comparison_group_id": "conditions_b83821ff8e8121af94949ab8",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5",
+    "task_id": "task_faae9a64bd03b223386515b9"
+  },
+  {
+    "comparison_group_id": "conditions_15dd6094e4e327061b57c438",
+    "eligible_candidates": 11,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_faae9a64bd03b223386515b9"
+  },
+  {
+    "comparison_group_id": "conditions_ca73e7350d9353212119540e",
+    "eligible_candidates": 10,
+    "split": "train",
+    "target_model": "qwen3.5-coder",
+    "task_id": "task_faae9a64bd03b223386515b9"
+  }
+]

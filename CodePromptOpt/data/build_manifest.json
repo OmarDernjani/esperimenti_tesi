@@ -1,0 +1,80 @@
+{
+  "comparison_policy": "same stored task record only",
+  "input_sources": [
+    {
+      "bytes": 479008,
+      "documents": 1,
+      "rows": 90,
+      "sha256": "8bedb01708004dd0eefa59b10cdc3ab30564fc65afed8cd6112cc7841874b999",
+      "source_file": "results_esperimenti/best_prompts.json"
+    },
+    {
+      "bytes": 3967894,
+      "documents": 1,
+      "rows": 31,
+      "sha256": "6b7697568779e868940f7d0ae41fcc323bfab207a5356856007bfebdd80f76c6",
+      "source_file": "results_esperimenti/results_APPS/qwen3.5+qwen3.5-coder.json"
+    },
+    {
+      "bytes": 21505279,
+      "documents": 1,
+      "rows": 45,
+      "sha256": "6f02cafa90b21132a23d279c52e1df565be95f880a7e09688867401d9eac15da",
+      "source_file": "results_esperimenti/results_APPS/qwen3.5-coder+qwen3.5.json"
+    },
+    {
+      "bytes": 34543584,
+      "documents": 1,
+      "rows": 45,
+      "sha256": "e164c5d4efb813fc8429bce71df4fc629fe77f09c014c92a63c1e0f7abd48c6e",
+      "source_file": "results_esperimenti/results_APPS/qwen3.5-coder_self.json"
+    },
+    {
+      "bytes": 12313817,
+      "documents": 1,
+      "rows": 45,
+      "sha256": "093cc2a895d72501534cb845dfe1e406378b1e1724a8440e8270c8bc2488ac5e",
+      "source_file": "results_esperimenti/results_APPS/qwen3.5_self.json"
+    },
+    {
+      "bytes": 3390945,
+      "documents": 1,
+      "rows": 45,
+      "sha256": "0f02c11abf2070a57398c61e3a4534b6b0d8f47dde005ac3e657f8f6a37dbd30",
+      "source_file": "results_esperimenti/results_HUMANEVAL+/qwen3.5+qwen3.5-coder.json"
+    },
+    {
+      "bytes": 3456984,
+      "documents": 1,
+      "rows": 45,
+      "sha256": "6ff5192e096e8cf52604270fa360b02be90fe7c89a064382c198299a6ed85fc4",
+      "source_file": "results_esperimenti/results_HUMANEVAL+/qwen3.5-coder+qwen3.5.json"
+    },
+    {
+      "bytes": 3243937,
+      "documents": 1,
+      "rows": 45,
+      "sha256": "5a92f202f3aaa3f7672f58ab7e685edf05cd264857fa740fb90693c1a01931f0",
+      "source_file": "results_esperimenti/results_HUMANEVAL+/qwen3.5-coder_self.json"
+    },
+    {
+      "bytes": 3601746,
+      "documents": 2,
+      "rows": 46,
+      "sha256": "6d56c0ee06d1dad034a1ee1c9d183694c71f648fc1f74ce5eb966e0d77745e72",
+      "source_file": "results_esperimenti/results_HUMANEVAL+/qwen3.5_self.json"
+    }
+  ],
+  "max_dpo_pairs_per_task_target": 5,
+  "min_dpo_score_margin": 0.2,
+  "pipeline_version": "1.0.0",
+  "prompt_deduplication": "exact",
+  "quality_filtering": "strict",
+  "seed": 42,
+  "sft_zero_score_labels": false,
+  "split_ratios": [
+    70,
+    10,
+    10
+  ]
+}

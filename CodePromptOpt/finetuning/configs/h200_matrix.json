@@ -1,0 +1,28 @@
+{
+  "defaults": {
+    "revision": "main",
+    "target_label": "qwen3.5-coder",
+    "mode": "lora",
+    "require_bf16": true,
+    "max_length": 4096,
+    "learning_rate": 0.00005,
+    "epochs": 5,
+    "batch_size": 1,
+    "gradient_accumulation_steps": 8,
+    "lora_rank": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.1,
+    "early_stopping_patience": 2,
+    "balance_tasks": true
+  },
+  "seeds": [42, 43, 44],
+  "strategies": ["best", "random", "topk"],
+  "models": {
+    "qwen3_8b": {"model": "Qwen/Qwen3-8B", "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"]},
+    "qwen3_4b": {"model": "Qwen/Qwen3-4B", "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"]},
+    "qwen3_14b": {"model": "Qwen/Qwen3-14B", "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"]},
+    "phi4_mini": {"model": "microsoft/Phi-4-mini-instruct", "target_modules": ["qkv_proj", "o_proj"]},
+    "qwen3_32b": {"model": "Qwen/Qwen3-32B", "mode": "qlora", "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"]}
+  },
+  "default_models": ["qwen3_8b", "qwen3_4b", "qwen3_14b", "phi4_mini"]
+}

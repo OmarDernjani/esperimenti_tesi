@@ -1,0 +1,6 @@
+**
+!CodePromptOpt
+!CodePromptOpt/**
+CodePromptOpt/.runtime
+CodePromptOpt/**/__pycache__
+CodePromptOpt/finetuning/outputs

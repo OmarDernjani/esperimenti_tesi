@@ -1,0 +1,18 @@
+{
+  "paradigm": "SFT",
+  "configuration_kind": "trainer-neutral example; adapt field mappings to your training framework",
+  "base_model": "REPLACE_WITH_YOUR_PROMPT_OPTIMIZER_MODEL",
+  "train_file": "CodePromptOpt/data/sft/train.jsonl",
+  "validation_file": "CodePromptOpt/data/sft/validation.jsonl",
+  "input_template": "{instruction}\n\nTarget code generation model: {target_model}\n\nProgramming problem:\n{input}",
+  "response_field": "output",
+  "loss_on_response_only": true,
+  "truncate_original_problem_or_prompt": false,
+  "seed": 42,
+  "learning_rate": 0.00002,
+  "epochs": 3,
+  "per_device_batch_size": 1,
+  "gradient_accumulation_steps": 8,
+  "checkpoint_selection": "validation tasks only",
+  "do_not_load": ["canonical test-task scores", "test-task optimized prompts", "generated_code"]
+}
