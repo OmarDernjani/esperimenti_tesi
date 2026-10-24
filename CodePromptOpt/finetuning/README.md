@@ -1,5 +1,7 @@
 # Fine-tuning di prompt optimizer
 
+Le impostazioni Podman sono persistenti in `podman.env`: `podman.sh config` mostra GPU e percorso output. Il nuovo comando `podman.sh await-job` attende, salva i log e rimuove il container solo in caso di successo, senza funzioni da definire nel terminale. Il default output del wrapper e `outputs/h200-batteria-v1`; per i vecchi run specificare `--output CodePromptOpt/finetuning/outputs/h200`.
+
 Per chiamare code generator vLLM dai prompt già generati, inclusa DGX Spark e client Windows con ripresa/cache, vedere [downstream/README.md](downstream/README.md).
 
 **Nuovo percorso per H200:** seguire [SERVER_H200.md](SERVER_H200.md). Include LoRA BF16, Qwen3-4B/8B/14B e Phi-4-mini, dataset Best/Random/Top-k, tre seed e un wrapper Podman per ogni fase. Le istruzioni seguenti descrivono il percorso originale QLoRA da 24 GB; la guida H200 lo estende e include anche la valutazione senza Python installato sull'host.

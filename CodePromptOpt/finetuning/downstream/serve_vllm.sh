@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run on the Linux Spark, not on the Windows client. GPU 0 is the Spark default.
+# Linux server launcher. Spark defaults to GPU 0; h200.sh supplies GPU 3.
 set -euo pipefail
 : "${VLLM_IMAGE:?Set VLLM_IMAGE to a Spark/ARM64-compatible vLLM image tag or digest from the NVIDIA/vLLM recipe}"
 model="${CODEGEN_MODEL:-Qwen/Qwen2.5-Coder-7B-Instruct}"
@@ -7,7 +7,9 @@ name="${CODEGEN_CONTAINER:-cpo-vllm}"
 gpu="${CODEGEN_GPU:-0}"
 port="${CODEGEN_PORT:-8000}"
 cache="${CODEGEN_CACHE:-cpo-vllm-hf}"
-podman pull "$VLLM_IMAGE"
+if ! podman image exists "$VLLM_IMAGE"; then
+  podman pull "$VLLM_IMAGE"
+fi
 echo 'Host architecture:' "$(uname -m)"
 podman image inspect --format 'Image architecture={{.Architecture}} ID={{.Id}}' "$VLLM_IMAGE"
 if [[ "$(uname -m)" == aarch64 && "$(podman image inspect --format '{{.Architecture}}' "$VLLM_IMAGE")" != arm64 ]]; then

@@ -2,6 +2,7 @@
 # Host-side cleanup: works even when storage is too full to launch a container.
 # Only model directories in the named HF cache volume are eligible for deletion.
 set -euo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/podman.env"
 volume="${CPO_CACHE:-cpo-hf-cache}"
 model=''
 all=0

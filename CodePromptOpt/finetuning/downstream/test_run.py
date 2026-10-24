@@ -10,9 +10,32 @@ from unittest.mock import patch
 
 from ..common import read_jsonl, write_jsonl
 from .run import discover, main
+from .configure_h200 import make_config, save_config
+from .audit_prompts import inspect_prompt
 
 
 class DownstreamTests(unittest.TestCase):
+    def test_prompt_audit_distinguishes_formatting_from_repetition(self):
+        flags = inspect_prompt('Instructions: def count(n): return n', '\ndef count(n):\n    return n\n', 'count')
+        self.assertFalse(flags['preserved_exact'])
+        self.assertTrue(flags['preserved_whitespace_normalized'])
+        self.assertTrue(flags['entry_point_present'])
+        repeated = inspect_prompt(('Please solve this task carefully and return correct code. ' * 20),
+                                  'original problem', 'count')
+        self.assertTrue(repeated['repetition_warning'])
+        self.assertFalse(repeated['entry_point_present'])
+
+    def test_h200_config_records_identity_and_protects_existing_experiment(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'server-config.json'
+            cfg = make_config('model', 'commit', 'sha256:image', 16384, 0.7, 4, 'h200-v1')
+            save_config(path, cfg)
+            save_config(path, cfg)
+            self.assertEqual(json.loads(path.read_text())['server_metadata']['model_revision'], 'commit')
+            changed = make_config('model', 'different-commit', 'sha256:image', 16384, 0.7, 4, 'h200-v1')
+            with self.assertRaises(ValueError):
+                save_config(path, changed)
+
     def fixture(self, root):
         tasks = root / 'tasks.jsonl'
         write_jsonl(tasks, [{'task_id': 't', 'split': 'validation', 'problem': 'PROBLEM'}])

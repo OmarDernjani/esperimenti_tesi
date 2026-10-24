@@ -1,5 +1,7 @@
 # Code generation dai prompt locali, con vLLM remoto
 
+Per eseguire generatore e client sullo stesso server H200, GPU 3, senza Spark o tunnel SSH, usare la procedura [H200.md](H200.md) e `h200.sh`. Le impostazioni sono persistenti in `h200.env`.
+
 Questa cartella invia i prompt prodotti dagli optimizer a un **code generator fisso**, poi salva il codice in un formato compatibile con la sandbox di valutazione esistente. Il client usa solo Python 3.10+ standard: non scarica modelli e non richiede GPU. I modelli risiedono nella DGX Spark, serviti da vLLM. Il PC mantiene prompt, risposte e risultati; non occorre copiare gli adapter sulla Spark.
 
 L'API è [Chat Completions compatibile OpenAI di vLLM](https://docs.vllm.ai/en/stable/serving/online_serving/openai_compatible_server/). Il server viene avviato tramite Podman; il client può girare sul PC Windows oppure in un container CPU Linux. L'immagine di training H200 non viene riutilizzata sulla Spark: serve una build vLLM adatta a ARM64/GB10, secondo la [procedura NVIDIA DGX Spark](https://build.nvidia.com/spark/vllm/instructions).

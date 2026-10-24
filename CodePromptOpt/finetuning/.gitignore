@@ -1,2 +1,4 @@
 outputs/
 __pycache__/
+!podman.env
+!downstream/h200.env

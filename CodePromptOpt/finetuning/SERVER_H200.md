@@ -1,5 +1,16 @@
 # Esperimenti H200 con Podman
 
+Per usare anche il code generator sulla H200 via Podman, dopo la generazione dei prompt, vedere [downstream/H200.md](downstream/H200.md): `h200.sh` gestisce vLLM sulla GPU 3 e client locale, senza tunnel SSH.
+
+Configurazione persistente: `podman.env` viene letto a ogni invocazione del wrapper (anche da una nuova sessione SSH). Contiene GPU, immagine, container, cache e `CPO_OUTPUT`, inizialmente `CodePromptOpt/finetuning/outputs/h200-batteria-v1`. `podman.sh config` mostra i valori attivi. I comandi suite senza `--output` usano ora quel percorso; per continuare i vecchi esperimenti `outputs/h200` passare `--output CodePromptOpt/finetuning/outputs/h200` o modificare `CPO_OUTPUT` nel file. Le variabili gia esportate nel terminale hanno precedenza sul file.
+
+La funzione di attesa non va piu definita nella shell: `bash CodePromptOpt/finetuning/podman.sh await-job` aspetta, salva automaticamente un log univoco nella directory del job e rimuove solo il container terminato con successo. In caso di fallimento conserva il container e restituisce l'exit code. Funziona dopo una riconnessione SSH; `wait` resta disponibile come sola attesa senza pulizia. Non cambiare `CPO_CONTAINER_NAME` mentre un lavoro e in esecuzione. Non serve usare `source podman.sh`.
+
+```bash
+bash CodePromptOpt/finetuning/podman.sh train --models qwen3_4b
+bash CodePromptOpt/finetuning/podman.sh await-job
+```
+
 Questa guida assume un server Linux con una H200 accessibile come **GPU host 3**. Tutti gli script Python, i download, il training, l'inferenza e l'analisi girano in container. Sull'host servono Bash, Podman, driver NVIDIA, NVIDIA Container Toolkit con CDI e GNU `timeout` per la valutazione. Non occorrono Python, pip, CUDA toolkit o ambienti virtuali sull'host. Il runtime CUDA è nell'immagine; il driver resta sull'host.
 
 I comandi vanno eseguiti dalla radice della copia del repository sul server. Trasferire almeno `CodePromptOpt/` e `.containerignore`, includendo `CodePromptOpt/data/` ed escludendo `.runtime/`, cache e vecchi `outputs/`. Non è necessario trasferire i log grezzi `dataset_code_prompt/` per addestrare. Le directory di output e la cache Hugging Face sono persistenti.

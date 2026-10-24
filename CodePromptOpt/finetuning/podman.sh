@@ -2,6 +2,8 @@
 # Invoke with bash; Python and CUDA dependencies stay inside containers.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
+# Persistent project settings, available even in a new SSH session.
+source CodePromptOpt/finetuning/podman.env
 IMAGE="${CPO_IMAGE:-localhost/codepromptopt-ft:h200}"
 # Host GPU: defaults to 3, so no external export is needed.
 export CPO_GPU="${CPO_GPU:-3}"
@@ -12,6 +14,17 @@ network_args=()
 if [[ -n "${CPO_NETWORK:-}" ]]; then network_args=(--network "$CPO_NETWORK"); fi
 action="${1:-help}"
 if (( $# )); then shift; fi
+JOB_OUTPUT="$CPO_OUTPUT"
+if [[ "$action" == plan || "$action" == prepare || "$action" == smoke || "$action" == train || "$action" == generate ]]; then
+  remaining=("$@")
+  for ((i=0; i<${#remaining[@]}; i++)); do
+    if [[ "${remaining[i]}" == --output && $((i+1)) -lt ${#remaining[@]} ]]; then
+      JOB_OUTPUT="${remaining[i+1]}"
+    elif [[ "${remaining[i]}" == --output=* ]]; then
+      JOB_OUTPUT="${remaining[i]#--output=}"
+    fi
+  done
+fi
 run_cpu() {
   podman run --rm --pull=never "${network_args[@]}" --shm-size=8g -e PYTHONUNBUFFERED=1 \
     -e HF_TOKEN -e CODEGEN_API_KEY \
@@ -35,6 +48,7 @@ run_gpu_detached() {
     echo "Previous container retained as $archived"
   fi
   podman run -d --pull=never --name "$CONTAINER" "${network_args[@]}" \
+    --label "cpo.output=$JOB_OUTPUT" --label "cpo.stage=$action" \
     --device "nvidia.com/gpu=$GPU" -e CUDA_VISIBLE_DEVICES=0 \
     -e CUDA_DEVICE_ORDER=PCI_BUS_ID -e PYTHONUNBUFFERED=1 --shm-size=8g \
     -e HF_TOKEN -e CODEGEN_API_KEY \
@@ -42,6 +56,28 @@ run_gpu_detached() {
   echo "Container: $CONTAINER (detached; retained after exit)"
   echo "Logs: podman logs -f $CONTAINER"
   echo "Wait and check exit code: bash CodePromptOpt/finetuning/podman.sh wait"
+  echo "Wait, save logs and remove successful container: bash CodePromptOpt/finetuning/podman.sh await-job"
+}
+await_job() {
+  local code log_root logfile container_id
+  code="$(podman wait "$CONTAINER")"
+  [[ "$code" =~ ^[0-9]+$ ]] || return 1
+  if (( $# > 0 )); then
+    logfile="$1"
+  else
+    log_root="$(podman inspect --format '{{ index .Config.Labels "cpo.output" }}' "$CONTAINER")"
+    [[ -n "$log_root" && "$log_root" != '<no value>' ]] || log_root="$CPO_OUTPUT"
+    container_id="$(podman inspect --format '{{.Id}}' "$CONTAINER")"
+    logfile="$log_root/logs/${CONTAINER}-$(date -u +%Y%m%dT%H%M%SZ)-${container_id:0:12}.log"
+  fi
+  mkdir -p "$(dirname "$logfile")"
+  podman logs "$CONTAINER" > "$logfile" 2>&1 || return 1
+  echo "Logs saved: $logfile"
+  if [[ "$code" != 0 ]]; then
+    echo "Job failed (exit $code). Container retained: $CONTAINER" >&2
+    return "$code"
+  fi
+  podman rm "$CONTAINER"
 }
 case "$action" in
   build)
@@ -51,17 +87,19 @@ case "$action" in
   doctor)
     run_gpu python -m CodePromptOpt.finetuning.doctor
     ;;
-  plan) run_cpu python -m CodePromptOpt.finetuning.suite --stage plan "$@" ;;
+  plan) run_cpu python -m CodePromptOpt.finetuning.suite --stage plan --output "$CPO_OUTPUT" "$@" ;;
   prepare)
-    run_gpu python -m CodePromptOpt.finetuning.suite --stage "$action" "$@"
+    run_gpu python -m CodePromptOpt.finetuning.suite --stage "$action" --output "$CPO_OUTPUT" "$@"
     ;;
   smoke|train|generate)
-    run_gpu_detached python -m CodePromptOpt.finetuning.suite --stage "$action" "$@"
+    run_gpu_detached python -m CodePromptOpt.finetuning.suite --stage "$action" --output "$CPO_OUTPUT" "$@"
     ;;
   cpu) run_cpu "$@" ;;
   gpu) run_gpu_detached "$@" ;;
   logs) podman logs -f "$CONTAINER" "$@" ;;
   status) podman inspect --format '{{.Name}}: {{.State.Status}} (exit={{.State.ExitCode}})' "$CONTAINER" ;;
+  config) printf 'GPU=%s\nCONTAINER=%s\nIMAGE=%s\nCACHE=%s\nOUTPUT=%s\n' "$GPU" "$CONTAINER" "$IMAGE" "$CACHE" "$CPO_OUTPUT" ;;
+  await-job|await_job) await_job "$@" ;;
   wait)
     code="$(podman wait "$CONTAINER")"
     echo "$CONTAINER exited with code $code"
@@ -101,6 +139,6 @@ case "$action" in
     run_cpu python -m CodePromptOpt.finetuning.container_evaluate collect --jobs "$jobs" --output "$output"
     ;;
   *)
-    echo 'Usage: bash CodePromptOpt/finetuning/podman.sh {build|doctor|plan|prepare|smoke|train|generate|cpu|gpu|evaluate|logs|status|wait|stop} [arguments]'
+    echo 'Usage: bash CodePromptOpt/finetuning/podman.sh {build|doctor|plan|prepare|smoke|train|generate|cpu|gpu|evaluate|logs|status|wait|await-job|config|stop} [arguments]'
     ;;
 esac
