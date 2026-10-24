@@ -36,7 +36,7 @@ case "$action" in
     podman pull "$VLLM_IMAGE"
     image_id="$(podman image inspect --format '{{.Id}}' "$VLLM_IMAGE")"
     # Resolve the exact HF commit without downloading model weights to the host.
-    revision="$(podman run --rm --pull=never --entrypoint python -e HF_TOKEN "$image_id" -c \
+    revision="$(podman run --rm --pull=never --entrypoint python3 -e HF_TOKEN "$image_id" -c \
       'import sys; from huggingface_hub import HfApi; print(HfApi().model_info(sys.argv[1], revision=sys.argv[2]).sha)' \
       "$CODEGEN_MODEL" "$CODEGEN_REVISION")"
     [[ "$revision" =~ ^[a-fA-F0-9]{40}$ ]] || { echo 'Could not resolve model commit' >&2; exit 1; }

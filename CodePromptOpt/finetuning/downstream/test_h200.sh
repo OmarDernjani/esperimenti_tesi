@@ -20,6 +20,7 @@ podman() {
     'inspect --format') printf 'true\n' ;;
     'run --rm')
       if [[ "$*" == *HfApi* ]]; then
+        [[ "$*" == *'--entrypoint python3'* ]] || return 95
         printf 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n'
       else
         [[ "$*" == *configure_h200* && "$*" == *'--revision aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'* ]] || return 92
