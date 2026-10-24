@@ -12,9 +12,17 @@ from ..common import read_jsonl, write_jsonl
 from .run import discover, main, request_json
 from .configure_h200 import make_config, save_config
 from .audit_prompts import inspect_prompt
+from .summarize_results import task_bootstrap
 
 
 class DownstreamTests(unittest.TestCase):
+    def test_task_bootstrap_preserves_constant_delta_and_seed(self):
+        lower, upper = task_bootstrap([-0.1] * 10, samples=1000)
+        self.assertAlmostEqual(lower, -0.1)
+        self.assertAlmostEqual(upper, -0.1)
+        deltas = [-1, 0, 0, 1]
+        self.assertEqual(task_bootstrap(deltas, samples=1000), task_bootstrap(deltas, samples=1000))
+
     def test_connection_reset_is_retried_and_reported(self):
         response = io.StringIO('{"data": []}')
         with patch('urllib.request.urlopen', side_effect=[ConnectionResetError(104, 'reset'), response]) as opened, \

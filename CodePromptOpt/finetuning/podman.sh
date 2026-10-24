@@ -131,7 +131,7 @@ case "$action" in
         --cap-drop=ALL --security-opt=no-new-privileges --pids-limit=64 --memory=512m --cpus=1 \
         --user=65534:65534 --tmpfs=/tmp:rw,noexec,nosuid,size=64m \
         -e PYTHONDONTWRITEBYTECODE=1 -v "$jobs_abs/$job:/work:ro,z" -w /work \
-        "$TEST_IMAGE_ID" python -B check.py >/dev/null 2>&1 || rc=$?
+        "$TEST_IMAGE_ID" python -B probe.py check.py > "$jobs_abs/$job/diagnostic.json" 2>/dev/null || rc=$?
       podman rm -f "$name" >/dev/null 2>&1 || true
       if [[ "$rc" == 125 || "$rc" == 126 || "$rc" == 127 ]]; then
         echo "Podman infrastructure failure for job $job (exit $rc)" >&2; exit 1

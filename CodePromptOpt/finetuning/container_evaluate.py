@@ -45,6 +45,9 @@ def main():
                 file = folder / name
                 file.write_text(text, encoding='utf-8')
                 file.chmod(0o644)
+            probe = folder / 'probe.py'
+            probe.write_text(Path(__file__).with_name('sandbox_probe.py').read_text(encoding='utf-8'), encoding='utf-8')
+            probe.chmod(0o644)
             rows.append({**row, 'job_id': idx, 'tests_sha256': digest(args.tests),
                          'test_image': args.image, 'test_timeout': 20})
         write_jsonl(jobs / 'manifest.jsonl', rows)
@@ -58,6 +61,11 @@ def main():
             if rc in (125, 126, 127):
                 raise ValueError('Infrastructure failure')
             row.update(passed=rc == 0, timeout=rc in (124, 137), returncode=rc)
+            diagnostics = jobs / str(row['job_id']) / 'diagnostic.json'
+            if diagnostics.exists() and diagnostics.stat().st_size:
+                row['diagnostic'] = json.loads(diagnostics.read_text(encoding='utf-8'))
+            elif rc in (124, 137):
+                row['diagnostic'] = {'category': 'outer_timeout_or_kill'}
         output = workspace_path(args.output)
         write_jsonl(output, rows)
         summary = {'tasks': len(rows), 'pass_at_1': statistics.mean(r['passed'] for r in rows),
