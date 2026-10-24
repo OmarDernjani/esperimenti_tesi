@@ -15,7 +15,9 @@ podman image inspect --format 'Image architecture={{.Architecture}} ID={{.Id}}' 
 if [[ "$(uname -m)" == aarch64 && "$(podman image inspect --format '{{.Architecture}}' "$VLLM_IMAGE")" != arm64 ]]; then
   echo 'Spark requires an ARM64 image; select the image from its supported recipe.' >&2; exit 1
 fi
-podman volume create "$cache" >/dev/null
+if ! podman volume exists "$cache"; then
+  podman volume create "$cache" >/dev/null
+fi
 extra=()
 [[ -z "${CODEGEN_REVISION:-}" ]] || extra+=(--revision "$CODEGEN_REVISION")
 [[ -z "${CODEGEN_API_KEY:-}" ]] || extra+=(--api-key "$CODEGEN_API_KEY")

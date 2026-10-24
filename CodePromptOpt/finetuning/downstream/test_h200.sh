@@ -9,6 +9,7 @@ podman() {
   case "$1 $2" in
     'container exists') [[ "$CPO_MOCK_TRAINING" == true && "$3" == cpo-gpu-3 ]]; return ;;
     'image exists') return 0 ;;
+    'volume exists') return 0 ;;
     'image inspect')
       if [[ "$*" == *'{{.Id}}'* && "$*" != *Architecture* ]]; then
         printf 'sha256:mock-image\n'
