@@ -13,8 +13,8 @@ config="$CPO_CODEGEN_OUTPUT/$CPO_CODEGEN_EXPERIMENT/server-config.json"
 case "$action" in
   build) bash CodePromptOpt/finetuning/downstream/client.sh build ;;
   config)
-    printf 'MODEL=%s\nGPU=%s\nIMAGE=%s\nINPUT=%s\nOUTPUT=%s\nCONFIG=%s\n' \
-      "$CODEGEN_MODEL" "$CODEGEN_GPU" "$VLLM_IMAGE" "$CPO_CODEGEN_INPUT" "$CPO_CODEGEN_OUTPUT/$CPO_CODEGEN_EXPERIMENT" "$config"
+    printf 'MODEL=%s\nGPU=%s\nIMAGE=%s\nINPUT=%s\nOUTPUT=%s\nCONFIG=%s\nAPI=http://127.0.0.1:%s/v1\n' \
+      "$CODEGEN_MODEL" "$CODEGEN_GPU" "$VLLM_IMAGE" "$CPO_CODEGEN_INPUT" "$CPO_CODEGEN_OUTPUT/$CPO_CODEGEN_EXPERIMENT" "$config" "$CODEGEN_PORT"
     ;;
   start)
     if (( $# )); then
@@ -50,7 +50,12 @@ case "$action" in
       bash CodePromptOpt/finetuning/downstream/serve_vllm.sh "$@"
     ;;
   logs) podman logs -f "$CODEGEN_CONTAINER" "$@" ;;
-  status) podman inspect --format '{{.Name}}: {{.State.Status}} (exit={{.State.ExitCode}})' "$CODEGEN_CONTAINER" ;;
+  status)
+    podman inspect --format '{{.Name}}: {{.State.Status}} (exit={{.State.ExitCode}})' "$CODEGEN_CONTAINER"
+    echo "Configured API: http://127.0.0.1:$CODEGEN_PORT/v1"
+    echo 'Actual published server port:'
+    podman port "$CODEGEN_CONTAINER" 8000/tcp
+    ;;
   ready)
     podman run --rm --pull=never --network=host -e CODEGEN_API_KEY "$CPO_CLIENT_IMAGE" python -c \
       'import sys; from CodePromptOpt.finetuning.downstream.run import request_json; print(request_json(sys.argv[1], timeout=10, retries=0))' \

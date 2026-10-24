@@ -4,6 +4,7 @@ from contextlib import closing
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 import fnmatch
+import http.client
 import json
 import os
 from pathlib import Path
@@ -87,9 +88,10 @@ def request_json(url, body=None, timeout=600, retries=3):
             detail = error.read().decode(errors='replace')[:2000]
             if error.code not in (408, 429, 500, 502, 503, 504) or attempt == retries:
                 raise RuntimeError(f'HTTP {error.code}: {detail}') from error
-        except (urllib.error.URLError, TimeoutError):
+        except (urllib.error.URLError, TimeoutError, ConnectionError,
+                http.client.RemoteDisconnected, http.client.IncompleteRead) as error:
             if attempt == retries:
-                raise
+                raise RuntimeError(f'API transport error after {attempt + 1} attempt(s): {error}') from error
         time.sleep(min(2 ** attempt, 16))
 
 
@@ -176,7 +178,12 @@ def main():
         p.error('Experiment configuration changed: choose a new experiment_id')
     atomic_json(config_path, configuration)
     base_url = args.base_url.rstrip('/')
-    models = request_json(base_url + '/models', timeout=args.timeout, retries=args.retries)
+    try:
+        models = request_json(base_url + '/models', timeout=args.timeout, retries=args.retries)
+    except RuntimeError as error:
+        raise SystemExit(f'Code-generator API check failed at {base_url}/models: {error}\n'
+                         'Check h200.sh status, server logs and the published port; '
+                         'wait for vLLM to finish startup before rerunning. No prompts were submitted in this attempt.') from error
     if cfg['model'] not in {r['id'] for r in models['data']}:
         p.error(f'Model {cfg["model"]} is not served by this endpoint')
     # Transaction per response: Ctrl+C/network failure can resume without repeating

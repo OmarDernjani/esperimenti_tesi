@@ -116,7 +116,9 @@ case "$action" in
     command -v timeout >/dev/null || { echo 'GNU timeout is required on the host' >&2; exit 2; }
     samples="$1"; tests="$2"; output="$3"; jobs="$4"
     TEST_IMAGE="${CPO_TEST_IMAGE:-docker.io/library/python:3.11-slim}"
-    podman pull "$TEST_IMAGE"
+    if ! podman image exists "$TEST_IMAGE"; then
+      podman pull "$TEST_IMAGE"
+    fi
     TEST_IMAGE_ID="$(podman image inspect --format '{{.Id}}' "$TEST_IMAGE")"
     run_cpu python -m CodePromptOpt.finetuning.container_evaluate prepare \
       --samples "$samples" --tests "$tests" --jobs "$jobs" --image "$TEST_IMAGE_ID"

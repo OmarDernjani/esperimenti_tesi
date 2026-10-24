@@ -9,12 +9,23 @@ import unittest
 from unittest.mock import patch
 
 from ..common import read_jsonl, write_jsonl
-from .run import discover, main
+from .run import discover, main, request_json
 from .configure_h200 import make_config, save_config
 from .audit_prompts import inspect_prompt
 
 
 class DownstreamTests(unittest.TestCase):
+    def test_connection_reset_is_retried_and_reported(self):
+        response = io.StringIO('{"data": []}')
+        with patch('urllib.request.urlopen', side_effect=[ConnectionResetError(104, 'reset'), response]) as opened, \
+             patch('time.sleep') as sleep:
+            self.assertEqual(request_json('http://localhost/v1/models', retries=1), {'data': []})
+            self.assertEqual(opened.call_count, 2)
+            sleep.assert_called_once()
+        with patch('urllib.request.urlopen', side_effect=ConnectionResetError(104, 'reset')):
+            with self.assertRaisesRegex(RuntimeError, 'after 1 attempt'):
+                request_json('http://localhost/v1/models', retries=0)
+
     def test_prompt_audit_distinguishes_formatting_from_repetition(self):
         flags = inspect_prompt('Instructions: def count(n): return n', '\ndef count(n):\n    return n\n', 'count')
         self.assertFalse(flags['preserved_exact'])
