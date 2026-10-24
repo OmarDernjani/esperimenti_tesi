@@ -1,0 +1,6 @@
+FROM docker.io/library/python:3.11-slim
+WORKDIR /workspace
+COPY CodePromptOpt/__init__.py /workspace/CodePromptOpt/__init__.py
+COPY CodePromptOpt/finetuning /workspace/CodePromptOpt/finetuning
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+CMD ["python", "-m", "CodePromptOpt.finetuning.downstream.run", "--help"]

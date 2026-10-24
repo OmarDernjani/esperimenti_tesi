@@ -13,12 +13,12 @@ if [[ -n "${CPO_NETWORK:-}" ]]; then network_args=(--network "$CPO_NETWORK"); fi
 action="${1:-help}"
 if (( $# )); then shift; fi
 run_cpu() {
-  podman run --rm "${network_args[@]}" --shm-size=8g -e PYTHONUNBUFFERED=1 \
+  podman run --rm --pull=never "${network_args[@]}" --shm-size=8g -e PYTHONUNBUFFERED=1 \
     -e HF_TOKEN -e CODEGEN_API_KEY \
     -v "$PWD:/workspace:z" -v "$CACHE:/cache" "$IMAGE" "$@"
 }
 run_gpu() {
-  podman run --rm "${network_args[@]}" --device "nvidia.com/gpu=$GPU" -e CUDA_VISIBLE_DEVICES=0 \
+  podman run --rm --pull=never "${network_args[@]}" --device "nvidia.com/gpu=$GPU" -e CUDA_VISIBLE_DEVICES=0 \
     -e CUDA_DEVICE_ORDER=PCI_BUS_ID -e PYTHONUNBUFFERED=1 --shm-size=8g \
     -e HF_TOKEN -e CODEGEN_API_KEY \
     -v "$PWD:/workspace:z" -v "$CACHE:/cache" "$IMAGE" "$@"
@@ -34,7 +34,7 @@ run_gpu_detached() {
     podman rename "$CONTAINER" "$archived"
     echo "Previous container retained as $archived"
   fi
-  podman run -d --name "$CONTAINER" "${network_args[@]}" \
+  podman run -d --pull=never --name "$CONTAINER" "${network_args[@]}" \
     --device "nvidia.com/gpu=$GPU" -e CUDA_VISIBLE_DEVICES=0 \
     -e CUDA_DEVICE_ORDER=PCI_BUS_ID -e PYTHONUNBUFFERED=1 --shm-size=8g \
     -e HF_TOKEN -e CODEGEN_API_KEY \

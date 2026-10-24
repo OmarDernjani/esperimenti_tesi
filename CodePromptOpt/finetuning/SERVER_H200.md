@@ -20,6 +20,8 @@ La matrice è in `configs/h200_matrix.json`: 4096 token totali input+output, ran
 
 ## 1. Preparare il server e costruire l'immagine
 
+Se appare `Trying to pull localhost/codepromptopt-ft:h200` seguito da `connect: connection refused`, l'immagine non è disponibile nello storage Podman dell'utente corrente. Ricostruirla con `bash CodePromptOpt/finetuning/podman.sh build`, poi rilanciare `doctor` e il comando desiderato. Usare sempre lo stesso utente e non alternare Podman rootless con `sudo podman`. Per elencare le immagini disponibili: `podman images`. Il wrapper usa `--pull=never` per l'immagine di lavoro, così non tenta di contattare un registry localhost quando manca. Dataset e adapter montati non vengono eliminati dal build.
+
 ```bash
 cd /percorso/meta_prompting
 nvidia-smi -L
@@ -102,6 +104,19 @@ bash CodePromptOpt/finetuning/podman.sh smoke --models qwen3_8b --seeds 42 --str
 Controllare `outputs/h200/runs/qwen3_8b-best-s42/audit.json` ed `excluded.jsonl`, poi la memoria GPU durante lo smoke con `nvidia-smi -i 3`. Lo smoke salva in `outputs/h200/smoke/`, quindi non viene confuso con un risultato sperimentale. Non viene valutato dalla suite. Per ripeterlo usare un nuovo `--output` con un piano corrispondente, oppure una nuova directory tramite il comando `train --max-steps 2` diretto.
 
 ## 4. Eseguire i training
+
+Per **riaddestrare da zero** run già presenti aggiungere `--retrain`. Funziona con `train` e `smoke`: prima di ogni run selezionato sposta la vecchia cartella in `outputs/h200/archive/TIMESTAMP/train/` (o `smoke/`), poi riparte dal modello base. Adapter precedenti, checkpoint e vecchi prompt vengono conservati nell'archivio e non si mescolano con quelli nuovi. Il piano, gli split e le revisioni rimangono gli stessi. Senza questo flag resta il comportamento protetto: i training completati vengono saltati.
+
+```bash
+# Rifare lo smoke di Qwen3-14B
+bash CodePromptOpt/finetuning/podman.sh smoke --models qwen3_14b --seeds 42 --strategies best --retrain
+bash CodePromptOpt/finetuning/podman.sh wait
+
+# Rifare tutti i nove training Qwen3-14B
+bash CodePromptOpt/finetuning/podman.sh train --models qwen3_14b --retrain
+```
+
+Per rifare soltanto un run aggiungere `--seeds 42 --strategies best`. Ogni lancio è detached: aspettare che termini la fase precedente. L'archiviazione è una rinomina nello stesso filesystem, non una copia dei pesi; i vecchi risultati continuano comunque a occupare disco. Il nuovo training scriverà nuovi file. Dopo il retraining occorre rigenerare i prompt; per nuovi test downstream scegliere un nuovo `experiment_id`.
 
 Primo confronto, 3 run:
 
@@ -235,6 +250,7 @@ bash CodePromptOpt/finetuning/podman.sh logs
 bash CodePromptOpt/finetuning/podman.sh status
 bash CodePromptOpt/finetuning/podman.sh wait
 bash CodePromptOpt/finetuning/podman.sh stop
+bash CodePromptOpt/finetuning/clear_cache.sh --model qwen3_4b
 ```
 
 Esegui i comandi dalla radice del repository sul server. Lo script seleziona già la GPU 3 e avvia tutto tramite Podman.

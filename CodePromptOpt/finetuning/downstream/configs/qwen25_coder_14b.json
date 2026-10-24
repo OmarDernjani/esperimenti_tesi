@@ -1,0 +1,7 @@
+{
+  "experiment_id": "qwen25-coder-14b-v1",
+  "model": "Qwen/Qwen2.5-Coder-14B-Instruct",
+  "parameters": {"temperature": 0, "top_p": 1, "max_tokens": 2048, "seed": 42},
+  "extra_body": {},
+  "server_metadata": {"model_revision": "SET_BEFORE_FINAL_EXPERIMENT", "image_digest": "SET_BEFORE_FINAL_EXPERIMENT", "dtype": "bfloat16"}
+}

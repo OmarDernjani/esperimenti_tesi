@@ -10,6 +10,7 @@ from .train import encode_example
 from .prepare_experiments import prepare, select_pool
 from .common import model_load_kwargs
 from types import SimpleNamespace
+from .suite import archive_run
 
 
 class FakeTokenizer:
@@ -23,6 +24,21 @@ class FakeTokenizer:
 
 
 class PipelineTests(unittest.TestCase):
+    def test_retrain_archives_adapter_and_old_prompts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            run = root / 'runs/qwen3_14b-best-s42'
+            (run / 'adapter').mkdir(parents=True)
+            (run / 'adapter/adapter_model.safetensors').write_bytes(b'old adapter')
+            (run / 'validation-sft-prompts.jsonl').write_text('old prompts')
+            archived = archive_run(root, run, 'train')
+            self.assertFalse(run.exists())
+            self.assertEqual((archived / 'adapter/adapter_model.safetensors').read_bytes(), b'old adapter')
+            self.assertTrue((archived / 'validation-sft-prompts.jsonl').exists())
+            self.assertIsNone(archive_run(root, run, 'train'))
+            with self.assertRaises(ValueError):
+                archive_run(root, root / 'datasets', 'train')
+
     def test_variants_preserve_splits_and_ignore_test_scores(self):
         from .common import read_jsonl
         with tempfile.TemporaryDirectory() as tmp:

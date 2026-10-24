@@ -13,6 +13,7 @@ podman() {
   case "$1" in
     run)
       [[ "$2" == -d && "$*" == *'--name cpo-gpu-3'* && "$*" != *'--rm'* ]] || return 90
+      [[ "$*" == *'--pull=never'* ]] || return 92
       printf 'mock-container-id\n'
       ;;
     inspect) printf 'true\n' ;;

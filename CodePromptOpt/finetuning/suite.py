@@ -4,8 +4,27 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+from datetime import datetime, timezone
+import uuid
 
 from .prepare_experiments import prepare
+
+
+def archive_run(root, run, stage):
+    """Preserve old adapter, checkpoints and prompts before a fresh training."""
+    root = Path(root).resolve()
+    run = Path(run)
+    expected_parent = root / ('smoke' if stage == 'smoke' else 'runs')
+    if run.is_symlink() or run.resolve().parent != expected_parent:
+        raise ValueError(f'Refusing to archive unexpected run path: {run}')
+    if not run.exists():
+        return None
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-' + uuid.uuid4().hex[:8]
+    destination = root / 'archive' / stamp / stage / run.name
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    run.rename(destination)
+    print(f'Previous run archived: {destination}', flush=True)
+    return destination
 
 
 def main():
@@ -19,7 +38,10 @@ def main():
     p.add_argument('--stage', choices=['plan', 'prepare', 'smoke', 'train', 'generate'], default='plan')
     p.add_argument('--split', choices=['validation', 'test'], default='validation')
     p.add_argument('--pin-revisions', action='store_true', help='Resolve HF commits during planning (network required)')
+    p.add_argument('--retrain', action='store_true', help='Archive selected old runs and train from scratch (train/smoke only)')
     args = p.parse_args()
+    if args.retrain and args.stage not in ('train', 'smoke'):
+        p.error('--retrain is only supported for train and smoke')
     matrix = json.loads(Path(args.matrix).read_text(encoding='utf-8'))
     models, seeds = args.models or matrix['default_models'], args.seeds or matrix['seeds']
     strategies = args.strategies or matrix['strategies']
@@ -87,7 +109,12 @@ def main():
                     subprocess.run(command + ['--prepare-only'], check=True)
                 elif args.stage == 'smoke':
                     command[-1] = str(root / 'smoke' / run.name)
+                    if args.retrain:
+                        archive_run(root, Path(command[-1]), 'smoke')
                     subprocess.run(command + ['--max-steps', '2'], check=True)
+                elif args.retrain:
+                    archive_run(root, run, 'train')
+                    subprocess.run(command, check=True)
                 elif (run / 'adapter' / 'adapter_config.json').exists() and (run / 'experiment.json').exists():
                     print(f'Skip completed: {run}', flush=True)
                 else:

@@ -22,6 +22,8 @@ def main():
                       'tests_sha256', 'test_image', 'test_timeout'):
             if a[field] != b[field]:
                 raise ValueError(f'Noncomparable {field}')
+        if a.get('codegen_server_metadata') != b.get('codegen_server_metadata'):
+            raise ValueError('Noncomparable code generator revision/environment')
         differences.append(int(b['passed']) - int(a['passed']))
     # A paired bootstrap resamples problems, not prompt rows.
     rng = random.Random(42)
