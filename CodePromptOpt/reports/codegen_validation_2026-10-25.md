@@ -1,5 +1,7 @@
 # Valutazione funzionale sulla validation
 
+Aggiornamento: la diagnostica dei dieci controlli APPS e disponibile in [apps_diagnostics_2026-10-25.md](apps_diagnostics_2026-10-25.md): 5 mismatch/asserzioni, 2 timeout interni, 2 eccezioni e 1 errore di interfaccia. I dati e i punteggi riportati sotto restano invariati.
+
 27 run, 108 file risultati e riepiloghi, 1080 righe; 10 task indipendenti e 3 seed di training.
 Code generator: `Qwen/Qwen2.5-Coder-7B-Instruct`. 249 richieste uniche; i controlli duplicati non sono repliche indipendenti.
 

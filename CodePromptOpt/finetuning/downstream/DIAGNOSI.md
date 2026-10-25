@@ -11,6 +11,14 @@ I risultati precedenti vanno conservati. La diagnostica seguente riusa il codice
 
 Trasferire gli script aggiornati e `verified_tests.jsonl`. Poi:
 
+Se compare `No module named ...diagnose_failures`, verificare prima che il file sia stato trasferito sul server. `podman.sh` monta il repository host su `/workspace`: ricostruire l'immagine da solo non aggiunge un modulo mancante nel repository montato. I file necessari aggiornati sono `downstream/diagnose_failures.py`, `sandbox_probe.py`, `container_evaluate.py` e `podman.sh` sotto `CodePromptOpt/finetuning/`.
+
+```bash
+cd /home/agostinelli/esperimenti_tesi
+ls -l CodePromptOpt/finetuning/downstream/diagnose_failures.py
+ls -l CodePromptOpt/finetuning/sandbox_probe.py
+```
+
 ```bash
 cd /home/agostinelli/esperimenti_tesi
 bash CodePromptOpt/finetuning/downstream/client.sh build

@@ -2,3 +2,4 @@ outputs/
 __pycache__/
 !podman.env
 !downstream/h200.env
+!downstream/qwen3_coder_30b.env
