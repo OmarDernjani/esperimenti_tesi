@@ -30,6 +30,7 @@ podman() {
     'run -d')
       [[ "$*" == *'nvidia.com/gpu=3'* && "$*" == *'127.0.0.1:8000:8000'* && "$*" == *'max-size=50mb'* ]] || return 93
       [[ "$*" == *'sha256:mock-image'* && "$*" == *'--revision aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'* ]] || return 94
+      [[ "$*" == *'-e HF_HUB_DISABLE_XET'* && "$*" == *'-e HF_HUB_DOWNLOAD_TIMEOUT'* ]] || return 96
       printf 'mock-server-container-id\n'
       ;;
     'pull example/image:test') return 0 ;;

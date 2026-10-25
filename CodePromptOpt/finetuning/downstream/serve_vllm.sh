@@ -25,6 +25,7 @@ podman run -d --name "$name" --device "nvidia.com/gpu=$gpu" \
   --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
   --log-driver=k8s-file --log-opt=max-size=50mb \
   -e CUDA_VISIBLE_DEVICES=0 -e HF_TOKEN \
+  -e HF_HUB_DISABLE_XET -e HF_HUB_DOWNLOAD_TIMEOUT -e HF_HUB_ETAG_TIMEOUT \
   -p "127.0.0.1:$port:8000" -v "$cache:/root/.cache/huggingface" \
   --entrypoint vllm "$VLLM_IMAGE" serve "$model" --served-model-name "$model" \
   --host 0.0.0.0 --port 8000 --dtype bfloat16 --max-model-len "${CODEGEN_CONTEXT:-16384}" \

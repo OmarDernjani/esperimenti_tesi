@@ -60,6 +60,24 @@ Se startup fallisce per memoria, leggere i log prima di intervenire. Eventuali c
 
 ## 3. Batteria completa, quando il pilot e verificato
 
+### Se il download fallisce con CAS/Xet
+
+Un traceback `File reconstruction error: CAS Client Error` / `error sending request ... cdn.hf.co/xorbs/...` indica un fallimento nel download dei pesi. Non equivale a CUDA OOM. Il profilo imposta ora `HF_HUB_DISABLE_XET=1`, `HF_HUB_DOWNLOAD_TIMEOUT=120`, `HF_HUB_ETAG_TIMEOUT=60`; `serve_vllm.sh` inoltra queste variabili al processo del container prima dell'import di Hugging Face.
+
+Aggiornare i due file sul server, poi:
+
+```bash
+# Conserva log e rimuove il container fallito; NON elimina il volume.
+bash CodePromptOpt/finetuning/downstream/h200_qwen3.sh stop
+df -h .
+bash CodePromptOpt/finetuning/downstream/h200_qwen3.sh start
+bash CodePromptOpt/finetuning/downstream/h200_qwen3.sh logs
+```
+
+I file completati nella cache possono essere riutilizzati. Non usare `free-cache` in questo caso. Se il problema continua anche senza hf-xet, verificare l'accesso HTTPS dal container ai domini Hugging Face/CDN, DNS, proxy e certificati; il messaggio allegato non identifica quale di questi sia la causa di rete. Non disabilitare TLS. Un export preesistente di `HF_HUB_DISABLE_XET=0` nella shell prevale sul default: usare `unset HF_HUB_DISABLE_XET` prima di rilanciare per applicare il valore del profilo.
+
+Riferimento: https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hfhubdisablexet . Cambiare il trasporto non richiede un nuovo experiment_id, poiche commit/pesi e parametri di generazione restano gli stessi.
+
 ```bash
 bash CodePromptOpt/finetuning/downstream/h200_qwen3.sh run --run-glob 'qwen3_4b-*' 'qwen3_8b-*' 'qwen3_14b-*'
 ```
