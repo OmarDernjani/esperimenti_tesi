@@ -105,6 +105,7 @@ def analyze(root, tasks_path, tests_path, split='validation'):
     return {'scope': split, 'independent_tasks': len(tasks), 'run_count': len(expected_runs),
             'file_count': len(metrics), 'result_rows': len(records), 'unique_codegen_requests': len(duplicates),
             'timeouts': sum(r['timeout'] for r in records), 'checked_executed_harnesses': checked_harnesses,
+            'diagnostic_records': sum('diagnostic' in r for r in records),
             'common_metadata': common, 'local_tests_sha256': digest(tests_path),
             'local_tests_lf_sha256': hashlib.sha256(test_bytes.replace(b'\r\n', b'\n')).hexdigest(),
             'warnings': warnings, 'groups': grouped, 'per_seed': metrics,
@@ -125,6 +126,18 @@ def main():
         writer = csv.DictWriter(stream, fieldnames=list(result['per_seed'][0]))
         writer.writeheader()
         writer.writerows(result['per_seed'])
+    aggregated = []
+    for row in result['groups']:
+        item = {k: row[k] for k in ('model', 'strategy', 'original', 'static', 'base', 'sft')}
+        item['sft_minus_base'] = row['sft'] - row['base']
+        item['sft_seed_sd'] = row['sft_seed_sd']
+        for seed, score in zip((42, 43, 44), row['sft_seed_scores']):
+            item[f'sft_seed_{seed}'] = score
+        aggregated.append(item)
+    with Path(str(prefix) + '-aggregated.csv').open('w', newline='', encoding='utf-8') as stream:
+        writer = csv.DictWriter(stream, fieldnames=list(aggregated[0]))
+        writer.writeheader()
+        writer.writerows(aggregated)
     lines = ['# Valutazione funzionale sulla validation', '',
         f'{result["run_count"]} run, {result["file_count"]} file risultati e riepiloghi, '
         f'{result["result_rows"]} righe; {result["independent_tasks"]} task indipendenti e 3 seed di training.',
@@ -134,7 +147,7 @@ def main():
         '- Tutti i file coprono lo stesso insieme di dieci task; i riepiloghi coincidono con i record.',
         '- Modello, decoding, revisione, immagine vLLM, suite, immagine sandbox e timeout sono identici.',
         f'- Verificati {result["checked_executed_harnesses"]} check.py esportati contro gli harness locali.',
-        '- Il checksum dei test differisce fra Windows e Linux solo per CRLF/LF; quello normalizzato LF coincide.',
+        '- Il checksum dei test coincide con il file locale o con la sua versione normalizzata LF (Windows/Linux).',
         f'- Timeout esterni registrati: {result["timeouts"]}. Un timeout interno APPS puo apparire come exit 1.',
         f'- Disaccordi sulle richieste riutilizzate: {len(result["warnings"])}.', '',
         '## Pass@1 medio sui tre seed di training', '',
@@ -160,21 +173,20 @@ def main():
         label = r['entry_point'] or r['source_id'] or r['task_id']
         values = [f'{r[v+"_passes"]}/{r[v+"_rows"]}' for v in ('original', 'static', 'base', 'sft')]
         lines.append(f'| {r["task_id"]} | {r["benchmark"]} | {label} | ' + ' | '.join(values) + ' |')
+    improved = sum(r['sft'] > r['base'] + 1e-12 for r in result['groups'])
+    tied = sum(abs(r['sft'] - r['base']) <= 1e-12 for r in result['groups'])
+    worsened = len(result['groups']) - improved - tied
     lines += ['', '## Interpretazione e limiti', '',
-        '- Nessuna configurazione SFT migliora il rispettivo optimizer base in questa validation. '
-        'Tutte restano sotto originale/statico (50%). Non emerge evidenza del beneficio cercato con il protocollo attuale.',
-        '- Originale/statico superano tutti e cinque i task HumanEval+ ma nessuno dei cinque APPS. '
-        'Anche ogni altra variante fallisce tutti gli APPS: analizzare questi fallimenti prima di estendere le conclusioni.',
-        '- Gli harness sono coerenti con i file preparati e i test sintetici del runner, ma nei risultati non e registrato '
-        'stderr: exit 1 non distingue algoritmo errato, interfaccia, eccezioni o timeout del sottoprocesso. '
-        'Non si puo attribuire ogni fallimento a uno specifico motivo da questi record.',
-        '- Alcune soluzioni APPS originali hanno problemi visibili nel testo, come nomi funzione diversi dalla specifica '
-        'o algoritmi che non gestiscono tutti i casi; questa ispezione non sostituisce una diagnosi runtime.',
+        f'- Rispetto al proprio optimizer base, {improved} configurazioni SFT migliorano la media, '
+        f'{tied} pareggiano e {worsened} peggiorano. Questi sono confronti descrittivi, non test di significativita.',
+        f'- Diagnostica runtime presente in {result["diagnostic_records"]}/{result["result_rows"]} righe. '
+        'Dove manca, exit 1 non distingue algoritmo errato, interfaccia, eccezioni o timeout del sottoprocesso.',
         '- Le ripetizioni/troncamenti dei prompt SFT rilevati nel precedente audit sono un limite plausibile, '
         'non una spiegazione causale dimostrata di ogni errore.',
-        '- Sono dieci task di validation, non il test finale. Non usare questi numeri come stima definitiva di generalizzazione '
-        'o evidenza universale contro SFT. Conservare il test per un protocollo fissato.', '',
-        'CSV: valori per ogni seed. JSON: metadata, controlli, confronti appaiati per tutte le baseline e dettaglio task.', '']
+        f'- Sono {result["independent_tasks"]} task di {result["scope"]}. '
+        'Non usare questi numeri come evidenza universale sul fine-tuning. Conservare il test per un protocollo fissato.', '',
+        'CSV: valori per ogni seed. CSV -aggregated: medie sui seed (proporzioni tra 0 e 1). '
+        'JSON: metadata, controlli, confronti appaiati per tutte le baseline e dettaglio task.', '']
     Path(str(prefix) + '.md').write_text('\n'.join(lines), encoding='utf-8')
     print(json.dumps({'runs': result['run_count'], 'files': result['file_count'], 'rows': result['result_rows'],
                       'unique_requests': result['unique_codegen_requests'], 'warnings': result['warnings'], 'report': str(prefix)}, indent=2))

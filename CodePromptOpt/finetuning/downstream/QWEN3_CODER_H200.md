@@ -105,3 +105,16 @@ bash CodePromptOpt/finetuning/downstream/evaluate_suite.sh \
 ```
 
 Se hai eseguito soltanto il pilot, il wrapper valuta i due file presenti; evita di rilanciare in seguito sulla stessa cartella con job gia esistenti. Puoi attendere di completare tutta la code generation prima della sandbox, oppure valutare successivamente i singoli file nuovi con `podman.sh evaluate` e percorsi jobs distinti.
+
+## 5. Tabella dei risultati, dopo tutti i 108 file
+
+Aggiornare `summarize_results.py` sul server e, dalla radice del repository:
+
+```bash
+CPO_IMAGE=localhost/cpo-codegen-client:1 bash CodePromptOpt/finetuning/podman.sh cpu \
+  python -m CodePromptOpt.finetuning.downstream.summarize_results \
+  --root CodePromptOpt/finetuning/outputs/codegen/qwen3-coder-30b-h200-v1/validation \
+  --report-prefix CodePromptOpt/reports/codegen_qwen3_coder_30b_validation
+```
+
+Vengono creati `.md` (tabella leggibile), `.csv` (singoli seed), `-aggregated.csv` (medie sui tre seed, in scala 0-1) e `.json` (tutti i dettagli). I risultati del 7B non vengono sovrascritti. Il riepilogo verifica completezza, suite, generatore e corrispondenza con i file code; si ferma se i dati non sono confrontabili.
