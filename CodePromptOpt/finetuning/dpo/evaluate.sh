@@ -2,6 +2,7 @@
 # CPU evaluation and paired comparison. Code generation uses codegen.sh.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../../.."
+source CodePromptOpt/finetuning/podman.env
 source CodePromptOpt/finetuning/dpo/podman.env
 source CodePromptOpt/finetuning/downstream/h200.env
 action="${1:-help}"
