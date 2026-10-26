@@ -1,0 +1,10 @@
+FROM docker.io/pytorch/pytorch:2.7.1-cuda12.6-cudnn9-runtime
+WORKDIR /workspace
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential && rm -rf /var/lib/apt/lists/*
+ENV CC=/usr/bin/gcc CXX=/usr/bin/g++
+COPY CodePromptOpt/finetuning/requirements.txt /tmp/requirements.txt
+COPY CodePromptOpt/finetuning/dpo/requirements.txt /tmp/dpo/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/dpo/requirements.txt && pip check
+COPY CodePromptOpt /workspace/CodePromptOpt
+ENV HF_HOME=/cache/huggingface TOKENIZERS_PARALLELISM=false
+CMD ["python", "-m", "CodePromptOpt.finetuning.dpo.train", "--help"]

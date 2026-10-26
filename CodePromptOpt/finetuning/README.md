@@ -1,12 +1,16 @@
 # Fine-tuning di prompt optimizer
 
+Per DPO di **Qwen3-8B su H200 / GPU 3**, con immagine e output separati, vedere
+[dpo/README.md](dpo/README.md): preferenze esistenti, audit, smoke, training,
+opzione SFT -> DPO e generazione per la valutazione funzionale.
+
 Le impostazioni Podman sono persistenti in `podman.env`: `podman.sh config` mostra GPU e percorso output. Il nuovo comando `podman.sh await-job` attende, salva i log e rimuove il container solo in caso di successo, senza funzioni da definire nel terminale. Il default output del wrapper e `outputs/h200-batteria-v1`; per i vecchi run specificare `--output CodePromptOpt/finetuning/outputs/h200`.
 
 Per chiamare code generator vLLM dai prompt già generati, inclusa DGX Spark e client Windows con ripresa/cache, vedere [downstream/README.md](downstream/README.md).
 
 **Nuovo percorso per H200:** seguire [SERVER_H200.md](SERVER_H200.md). Include LoRA BF16, Qwen3-4B/8B/14B e Phi-4-mini, dataset Best/Random/Top-k, tre seed e un wrapper Podman per ogni fase. Le istruzioni seguenti descrivono il percorso originale QLoRA da 24 GB; la guida H200 lo estende e include anche la valutazione senza Python installato sull'host.
 
-Questa cartella addestra **ottimizzatori di prompt**, da mettere prima di un code generator mantenuto fisso. Il percorso originale include Qwen3-4B e Phi-4-mini-instruct (3,8B, non Phi-4 da 14B), SFT QLoRA, generazione, chiamate a un code generator compatibile OpenAI e valutazione funzionale. Le configurazioni originali sono un punto di partenza per una GPU NVIDIA da 24 GB; quelle H200 aggiungono LoRA BF16 e ablation Random/Top-k. La memoria effettiva va misurata con il proprio dataset. DPO non è implementato.
+Questa cartella addestra **ottimizzatori di prompt**, da mettere prima di un code generator mantenuto fisso. Il percorso originale include Qwen3-4B e Phi-4-mini-instruct (3,8B, non Phi-4 da 14B), SFT QLoRA, generazione, chiamate a un code generator compatibile OpenAI e valutazione funzionale. Le configurazioni originali sono un punto di partenza per una GPU NVIDIA da 24 GB; quelle H200 aggiungono LoRA BF16 e ablation Random/Top-k. La memoria effettiva va misurata con il proprio dataset. Il percorso DPO e documentato separatamente in dpo/README.md.
 
 Eseguire tutti i comandi **dalla radice del repository**. Output e adapter vanno in directory distinte per ogni modello/seed. Il dataset originale non viene modificato.
 

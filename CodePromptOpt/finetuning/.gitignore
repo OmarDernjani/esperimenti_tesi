@@ -3,3 +3,6 @@ __pycache__/
 !podman.env
 !downstream/h200.env
 !downstream/qwen3_coder_30b.env
+!dpo/podman.env
+!dpo/requirements.txt
+!dpo/qwen3_8b.json
