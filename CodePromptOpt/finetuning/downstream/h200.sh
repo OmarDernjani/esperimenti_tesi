@@ -33,7 +33,7 @@ case "$action" in
     if ! podman image exists "$CPO_CLIENT_IMAGE"; then
       echo 'Build the CPU client first: bash CodePromptOpt/finetuning/downstream/h200.sh build' >&2; exit 1
     fi
-    podman pull "$VLLM_IMAGE"
+    if ! podman image exists "$VLLM_IMAGE"; then podman pull "$VLLM_IMAGE"; fi
     image_id="$(podman image inspect --format '{{.Id}}' "$VLLM_IMAGE")"
     # Resolve the exact HF commit without downloading model weights to the host.
     revision="$(podman run --rm --pull=never --entrypoint python3 -e HF_TOKEN "$image_id" -c \

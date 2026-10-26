@@ -1,5 +1,8 @@
 # DPO di Qwen3-8B su H200, con Podman
 
+Per generare il codice e la tabella **DPO vs SFT**, seguire
+[VALUTAZIONE.md](VALUTAZIONE.md). Il confronto usa gli stessi seed e verifica il protocollo.
+
 Questo esperimento addestra l'ottimizzatore dei prompt, non il code generator.
 Tutto il codice Python viene eseguito nei container. GPU host predefinita: **3**;
 nel container appare come `cuda:0`. Impostazioni persistenti in `podman.env` di
