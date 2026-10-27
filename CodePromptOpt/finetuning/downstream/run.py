@@ -18,6 +18,8 @@ from ..codegen import extract_code
 
 SYSTEM = 'Return only the complete executable Python solution, without Markdown.'
 VARIANTS = ('original', 'static', 'base', 'sft')
+SGDP_VARIANTS = ('all', 'dynamic', 'dynamic_abstain', 'ablation_C', 'ablation_A',
+                 'ablation_P', 'ablation_CA', 'ablation_CP', 'ablation_AP')
 
 
 def key_for(value):
@@ -115,7 +117,7 @@ def main():
     p.add_argument('--split', choices=['validation', 'test'], default='validation')
     p.add_argument('--runs', nargs='+', help='Exact run directory names; otherwise all runs')
     p.add_argument('--run-glob', nargs='+', help='Run directory patterns, e.g. qwen3_8b-*')
-    p.add_argument('--variants', nargs='+', choices=VARIANTS, default=list(VARIANTS))
+    p.add_argument('--variants', nargs='+', choices=VARIANTS + SGDP_VARIANTS, default=list(VARIANTS))
     p.add_argument('--config', default='CodePromptOpt/finetuning/downstream/configs/qwen25_coder_7b.json')
     p.add_argument('--base-url', default='http://127.0.0.1:8000/v1')
     p.add_argument('--plan-only', action='store_true', help='Offline audit; no server calls')

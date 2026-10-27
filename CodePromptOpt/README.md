@@ -1,5 +1,7 @@
 # CodePromptOpt
 
+Per la nuova direzione **strategie riutilizzabili e Strategy-Guided Dynamic Prompting**, vedere [strategies/README.md](strategies/README.md): estrazione di tutti i candidati, annotazione con evidenze, analisi esplorativa e prompt M0–M4 con ablazioni.
+
 Per addestrare Qwen3 e Phi-4-mini come prompt optimizer con QLoRA e confrontare la correttezza del codice generato, vedere [finetuning/README.md](finetuning/README.md). La cartella include training, inferenza, valutazione e Containerfile Podman.
 
 An offline, reproducible dataset for **programming problem → observed optimized code-generation prompt**, supporting SFT and DPO. Only result files under `dataset_code_prompt/` supply experimental observations. No LLM calls, code execution, benchmark downloads, or synthetic observations are involved. Python 3.10+ and its standard library are sufficient.
